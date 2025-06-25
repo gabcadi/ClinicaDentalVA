@@ -68,3 +68,61 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Error al crear la cita' }, { status: 500 });
   }
 }
+
+export async function GET() {
+  try {
+    await connectDB();
+    const appointments = await Appointment.find().sort({ date: 1, time: 1 });
+    return NextResponse.json(appointments, { status: 200 });
+  } catch (error) {
+    console.error('Error al obtener las citas:', error);
+    return NextResponse.json({ message: 'Error al obtener las citas' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    await connectDB();
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de la cita es requerido' }, { status: 400 });
+    }
+
+    const deletedAppointment = await Appointment.findByIdAndDelete(id);
+    if (!deletedAppointment) {
+      return NextResponse.json({ message: 'Cita no encontrada' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Cita eliminada exitosamente' }, { status: 200 });
+  } catch (error) {
+    console.error('Error al eliminar la cita:', error);
+    return NextResponse.json({ message: 'Error al eliminar la cita' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    await connectDB();
+    const { id, description, date, time } = await request.json();
+
+    if (!id || !description || !date || !time) {
+      return NextResponse.json({ message: 'Todos los campos son obligatorios' }, { status: 400 });
+    }
+
+    const updatedAppointment = await Appointment.findByIdAndUpdate(
+      id,
+      { description, date, time },
+      { new: true }
+    );
+
+    if (!updatedAppointment) {
+      return NextResponse.json({ message: 'Cita no encontrada' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Cita actualizada exitosamente', appointment: updatedAppointment }, { status: 200 });
+  } catch (error) {
+    console.error('Error al actualizar la cita:', error);
+    return NextResponse.json({ message: 'Error al actualizar la cita' }, { status: 500 });
+  }
+}

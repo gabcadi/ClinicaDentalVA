@@ -35,7 +35,7 @@ const handler = NextAuth({
 						throw new Error('Invalid password');
 					}
 
-					return { id: user._id, email: user.email, name: user.fullName };
+					return { id: user._id, email: user.email, name: user.fullName, role: user.role };
 				} catch (error) {
 					console.error('Error in authorize:', error);
 					throw new Error('Authorization failed');
@@ -48,6 +48,8 @@ const handler = NextAuth({
 			if (user) {
 				token.id = user.id;
 				token.email = user.email;
+				token.name = user.name;
+				token.role = user.role; 
 			}
 			return token;
 		},
@@ -56,7 +58,7 @@ const handler = NextAuth({
 				session.user = {
 					email: token.email,
 					name: token.name,
-					image: token.picture,
+					role: token.role,
 				};
 			}
 			return session;

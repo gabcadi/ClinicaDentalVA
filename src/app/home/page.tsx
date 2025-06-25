@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-const AppointmentsPage = () => {
+const HomePage = () => {
   const [form, setForm] = useState({
     description: '',
     date: '',
@@ -72,4 +72,4 @@ const AppointmentsPage = () => {
   );
 };
 
-export default AppointmentsPage;
+export default HomePage;

@@ -73,6 +73,16 @@ const UserButton = () => {
 								</DropdownMenuItem>
 							</>
 						)}
+						{session.user?.role === 'doctor' && (
+							<>
+								<DropdownMenuItem
+									className="h-10 text-sky-700 font-semibold cursor-pointer"
+									onClick={() => router.push('/doctor')}
+								>
+									Panel Médico
+								</DropdownMenuItem>
+							</>
+						)}
 						<DropdownMenuSeparator />
 						<DropdownMenuItem className="h-10 text-red-600 font-semibold cursor-pointer" onClick={handleSignOut}>
 							Cerrar sesión

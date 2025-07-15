@@ -1,32 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowRight, Search } from 'lucide-react';
+import { getPatients } from '@/lib/api/patients';
+import { ObjectId } from 'mongodb';
 
 interface Paciente {
-  id: number;
-  nombre: string;
-  cedula: string;
-  edad: number;
-  telefono: string;
+	age: number;
+	id: string;
+	phone: string;
+	address: string;
+  userId: ObjectId; 
 }
 
-const mockPacientes: Paciente[] = [
-  { id: 1, nombre: 'Juan Pérez', cedula: '1-1234-5678', edad: 34, telefono: '8888-1234' },
-  { id: 2, nombre: 'Ana Gómez', cedula: '2-2345-6789', edad: 28, telefono: '8999-2345' },
-  { id: 3, nombre: 'Luis Rodríguez', cedula: '3-3456-7890', edad: 41, telefono: '8777-3456' },
-];
-
 export default function PacientesPage() {
-  const [pacientes, setPacientes] = useState<Paciente[]>(mockPacientes);
-  const [busqueda, setBusqueda] = useState('');
+  
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const data = await getPatients();
+        setPacientes(data);
+        console.log('Pacientes fetched successfully:', data);
+      } catch (error) {
+        console.error('Error fetching patients:', error);
+      }
+    };
+    fetchPatients();
+  }, []);
 
-  const pacientesFiltrados = pacientes.filter((p) =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    p.cedula.includes(busqueda)
-  );
+  const [pacientes, setPacientes] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
@@ -64,23 +69,25 @@ export default function PacientesPage() {
                 <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Cédula</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Edad</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Teléfono</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Dirección</th>
                 <th className="px-6 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {pacientesFiltrados.length === 0 ? (
+              {pacientes.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-6 text-slate-500">
                     No se encontraron pacientes.
                   </td>
                 </tr>
               ) : (
-                pacientesFiltrados.map((paciente) => (
+                pacientes.map((paciente) => (
                   <tr key={paciente.id} className="hover:bg-sky-50">
-                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{paciente.nombre}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{paciente.cedula}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{paciente.edad}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{paciente.telefono}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{paciente.id}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{paciente.age}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{paciente.phone}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{paciente.address}</td>
                     <td className="px-6 py-4 text-right">
                       <Link href={`/doctor/pacientes/${paciente.id}`}>
                         <Button variant="outline" className="text-sky-600 border-sky-300 hover:bg-sky-50">

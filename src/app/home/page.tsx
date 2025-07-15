@@ -8,12 +8,6 @@ import { Calendar, Clock, FileText, Star, Sparkles, ArrowRight, Shield, Award, U
 import { toast } from 'sonner';
 
 const HomePage = () => {
-  const [form, setForm] = useState({
-    description: '',
-    date: '',
-    time: '',
-  });
-  const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [currentService, setCurrentService] = useState(0);
 
@@ -25,31 +19,11 @@ const HomePage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const res = await fetch('/api/appointments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-
-    if (res.ok) {
-      toast.success('Cita agendada exitosamente');
-      setForm({ description: '', date: '', time: '' });
-    } else {
-      toast.error('Error al agendar la cita');
-    }
-
-    setLoading(false);
-  };
-
 
   const services = [
     { icon: Star, title: 'Ortodoncia', desc: 'Sonrisas perfectas con tecnología avanzada', color: 'from-blue-500 to-cyan-500' },
     { icon: Sparkles, title: 'Blanqueamiento', desc: 'Dientes más blancos en una sola sesión', color: 'from-purple-500 to-pink-500' },
-    { icon: Shield, title: 'Implantes', desc: 'Soluciones permanentes de última generación', color: 'from-emerald-500 to-teal-500' },
+    { icon: Shield, title: 'Impl  antes', desc: 'Soluciones permanentes de última generación', color: 'from-emerald-500 to-teal-500' },
     { icon: Award, title: 'Estética Dental', desc: 'Diseño de sonrisa personalizado', color: 'from-amber-500 to-orange-500' }
   ];
 
@@ -186,64 +160,6 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* AGENDAR CITA */}
-        <section id="appointment" className="py-20">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                ¿Listo para tu
-                <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"> nueva sonrisa?</span>
-              </h2>
-              <p className="text-slate-300 text-lg">
-                Agenda tu cita y comienza tu transformación dental hoy mismo
-              </p>
-            </div>
-
-            <div className="relative max-w-md mx-auto">
-              <div className="absolute -inset-4 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 rounded-3xl blur-2xl"></div>
-              
-              <Card className="relative bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl">
-                <CardHeader className="text-center pb-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="w-8 h-8 text-white" />
-                  </div>
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-white to-cyan-100 bg-clip-text text-transparent">
-                    Agenda tu Cita
-                  </CardTitle>
-                  <p className="text-slate-300 mt-2">Tu sonrisa perfecta te espera</p>
-                </CardHeader>
-                
-                {/* Tipo de Cita */}
-                <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="text"
-              placeholder="Descripción"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              required
-            />
-            <Input
-              type="date"
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-              required
-            />
-            <Input
-              type="time"
-              value={form.time}
-              onChange={(e) => setForm({ ...form, time: e.target.value })}
-              required
-            />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Agendando...' : 'Agendar Cita'}
-            </Button>
-          </form>
-        </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
       </div>
 
       <style jsx>{`

@@ -69,7 +69,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export const GET = async (req: Request) => {
   try {
     await connectDB();
     const appointments = await Appointment.find().sort({ date: 1, time: 1 });

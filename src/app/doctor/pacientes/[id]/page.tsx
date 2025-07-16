@@ -1,38 +1,68 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { CalendarPlus, FileText, FolderOpen, ImageIcon, Stethoscope, User } from 'lucide-react';
+import * as Icons from 'lucide-react';
+import { getPatients } from '@/lib/api/patients';
+import { getUsers } from '@/lib/api/users';
+import { Patient, User } from '@/lib/types/interfaces';
 
 export default function PacienteDetalle() {
   const params = useParams();
   const id = params?.id;
+
+  const [paciente, setPaciente] = useState<Patient | null>(null);
+  const [users, setUsers] = useState<User[]>([]); 
+
+  useEffect(() => {
+    const fetchPaciente = async () => {
+      try {
+        const data = await getPatients(id);
+        setPaciente(data);
+      } catch (error) {
+        console.error('Error fetching patient:', error);
+      }
+    };
+
+    const fetchUsers = async () => {
+      try {
+        const data = await getUsers();
+        setUsers(data);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    fetchPaciente();
+    fetchUsers();
+  }, [id]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12 font-[var(--font-dmsans)]">
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-sky-700 tracking-tight">Paciente</h1>
-          <p className="text-slate-500 mt-2 text-lg">ID: {id}</p>
+          <p className="text-slate-500 mt-2 text-lg">Cédula: {id}</p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="col-span-2 bg-white rounded-2xl p-6 shadow-md border border-gray-100">
             <h2 className="text-xl font-semibold text-sky-600 flex items-center gap-2 mb-4">
-              <User className="w-5 h-5" /> Información General
+              <Icons.User className="w-5 h-5" /> Información General
             </h2>
             <ul className="space-y-3 text-gray-700">
-              <li><span className="font-medium">Nombre:</span> Juan Pérez</li>
-              <li><span className="font-medium">Edad:</span> 34 años</li>
-              <li><span className="font-medium">Cédula:</span> 1-1234-5678</li>
-              <li><span className="font-medium">Teléfono:</span> 8888-1234</li>
-              <li><span className="font-medium">Correo:</span> juanperez@email.com</li>
-              <li><span className="font-medium">Dirección:</span> San José, Costa Rica</li>
+              <li><span className="font-medium">Nombre: </span> </li>
+              <li><span className="font-medium">Edad: </span> </li>
+              <li><span className="font-medium">Cédula:</span> </li>
+              <li><span className="font-medium">Teléfono:</span> </li>
+              <li><span className="font-medium">Correo:</span> </li>
+              <li><span className="font-medium">Dirección:</span> </li>
             </ul>
           </div>
 
           <div className="bg-gradient-to-tr from-sky-600 to-sky-500 text-white rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg">
-            <CalendarPlus className="w-10 h-10 mb-4" />
+            <Icons.CalendarPlus className="w-10 h-10 mb-4" />
             <h3 className="text-lg font-semibold mb-2">¿Deseas agendar una cita?</h3>
             <Button className="bg-white text-sky-600 hover:bg-gray-100 w-full mt-2 rounded-full font-semibold">
               Crear nueva cita
@@ -41,10 +71,10 @@ export default function PacienteDetalle() {
         </div>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CardItem icon={<Stethoscope className="w-5 h-5" />} title="Historial Médico" description="Aún no hay registros disponibles." />
-          <CardItem icon={<ImageIcon className="w-5 h-5" />} title="Imágenes Médicas" description="No se han cargado imágenes." />
-          <CardItem icon={<FileText className="w-5 h-5" />} title="Recetas" description="No hay recetas activas." />
-          <CardItem icon={<FolderOpen className="w-5 h-5" />} title="Documentos Adjuntos" description="Sin archivos registrados." />
+          <CardItem icon={<Icons.Stethoscope className="w-5 h-5" />} title="Historial Médico" description="Aún no hay registros disponibles." />
+          <CardItem icon={<Icons.ImageIcon className="w-5 h-5" />} title="Imágenes Médicas" description="No se han cargado imágenes." />
+          <CardItem icon={<Icons.FileText className="w-5 h-5" />} title="Recetas" description="No hay recetas activas." />
+          <CardItem icon={<Icons.FolderOpen className="w-5 h-5" />} title="Documentos Adjuntos" description="Sin archivos registrados." />
         </section>
       </div>
     </div>

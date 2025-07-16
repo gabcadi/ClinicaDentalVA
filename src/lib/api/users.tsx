@@ -8,10 +8,10 @@ export const getUsers = async () => {
   return res.data;  
 };
 
-export const getUserById = async (id: string) => {
-  const res = await api.get(`/users/${id}`);
+export const getUserById = async (_id: string) => {
+  const res = await api.get(`/users/${_id}`);
   if (res.status !== 200) {
-    throw new Error(`Error fetching user with ID ${id}`);
+    throw new Error(`Error fetching user with ID ${_id}`);
   }
   return res.data;
 };

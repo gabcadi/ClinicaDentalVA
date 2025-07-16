@@ -3,26 +3,30 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowRight, Search } from 'lucide-react';
-import { getUsers } from '@/lib/api/users';
+import { Plus, ArrowRight, Search, Check, ChevronsUpDown } from 'lucide-react';
+import { getUsers, updateUserRole as apiUpdateUserRole } from '@/lib/api/users';
 import { User } from '@/lib/types/interfaces';
+import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [busqueda, setBusqueda] = useState<string>('');
+  const [loading, setLoading] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await getUsers();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    };
-
     fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const data = await getUsers();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Error al cargar los usuarios');
+    }
+  };
 
   // Opcional: filtrado en frontend
   const filteredUsers = users.filter((user) =>
@@ -31,6 +35,24 @@ export default function UsersPage() {
     user._id?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  const updateUserRole = async (userId: string, newRole: 'admin' | 'doctor' | 'user') => {
+    setLoading(prev => ({ ...prev, [userId]: true }));
+    try {
+      await apiUpdateUserRole(userId, newRole);
+      
+      setUsers(users.map(user => 
+        user._id.toString() === userId ? { ...user, role: newRole } : user
+      ));
+      
+      toast.success(`Rol actualizado a ${newRole}`);
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast.error('Error al actualizar el rol');
+    } finally {
+      setLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
       <div className="max-w-6xl mx-auto">
@@ -79,13 +101,64 @@ export default function UsersPage() {
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-sky-50">
+                  <tr key={user._id.toString()} className="hover:bg-sky-50">
                     <td className="px-6 py-4 text-sm text-gray-700 font-medium">{user.fullName}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{user.role}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{user.id}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className={`w-32 justify-between ${
+                              user.role === 'admin' 
+                                ? 'bg-yellow-100 text-yellow-700 border-yellow-300' 
+                                : user.role === 'doctor' 
+                                ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                                : 'bg-blue-100 text-blue-700 border-blue-300'
+                            }`}
+                            disabled={loading[user._id.toString()]}
+                          >
+                            {loading[user._id.toString()] ? (
+                              <span className="flex items-center gap-1">
+                                <div className="animate-spin h-4 w-4 border-2 border-gray-500 rounded-full border-r-transparent"></div>
+                                Actualizando
+                              </span>
+                            ) : (
+                              <>
+                                {user.role}
+                                <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                              </>
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-32">
+                          <DropdownMenuItem 
+                            onClick={() => updateUserRole(user._id.toString(), 'admin')}
+                            className="cursor-pointer text-yellow-700 font-medium"
+                          >
+                            {user.role === 'admin' && <Check className="h-4 w-4 mr-2" />}
+                            admin
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => updateUserRole(user._id.toString(), 'doctor')}
+                            className="cursor-pointer text-emerald-700 font-medium"
+                          >
+                            {user.role === 'doctor' && <Check className="h-4 w-4 mr-2" />}
+                            doctor
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => updateUserRole(user._id.toString(), 'user')}
+                            className="cursor-pointer text-blue-700 font-medium"
+                          >
+                            {user.role === 'user' && <Check className="h-4 w-4 mr-2" />}
+                            user
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{user._id.toString()}</td>
                     <td className="px-6 py-4 text-right">
-                      <Link href={`/admin/users/${user.id}`}>
+                      <Link href={`/admin/users/${user._id}`}>
                         <Button variant="outline" className="text-sky-600 border-sky-300 hover:bg-sky-50">
                           Ver más <ArrowRight className="w-4 h-4 ml-1" />
                         </Button>

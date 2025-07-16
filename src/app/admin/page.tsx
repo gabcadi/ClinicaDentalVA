@@ -8,7 +8,7 @@ import Link from 'next/link';
 const features = [
   {
     icon: <FileText className="w-6 h-6 text-sky-600" />,
-    title: 'Codigos CABYS',
+    title: 'Códigos CABYS',
     description: 'Visualiza, consulta y actualiza los códigos CABYS.',
     href: '/CABYS',
   },
@@ -33,9 +33,8 @@ export default function Page() {
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-100 px-6 py-12">
       <div className="max-w-7xl mx-auto">
         <header className="mb-16 text-center">
-          <h1 className="text-4xl font-bold text-sky-700">Clínica Vargas Araya - Panel Administrador</h1>
-          <p className="text-slate-600 mt-2 text-lg">Hola Admin!</p>
-          <p className="text-slate-600 mt-2 text-lg">Gestión clínica centralizada</p>
+          <h1 className="text-4xl font-bold text-sky-700">¡Hola Admin! - Panel Administrador</h1>
+          <p className="text-slate-600 mt-2 text-lg">Clínica Dental Vargas Araya</p>
         </header>
 
         {/* Card Principal usuarios  */}
@@ -49,13 +48,13 @@ export default function Page() {
                 <div>
                   <CardTitle className="text-2xl text-sky-700">Gestión de Usuarios</CardTitle>
                   <p className="text-slate-600 mt-1 max-w-xl">
-                    Administracion de usuarios, roles y permisos para un control total del sistema.
+                    Administración de usuarios, roles y permisos para un control total del sistema.
                   </p>
                 </div>
               </div>
               <Link href="/admin/users">
-                <Button className="bg-sky-600 hover:bg-sky-700 text-white rounded-md px-6 h-12">
-                  Modulo Usuarios
+                <Button className="bg-sky-600 hover:bg-sky-700 cursor-pointer text-white rounded-md px-6 h-12">
+                  Módulo de Usuarios
                 </Button>
               </Link>
             </CardHeader>

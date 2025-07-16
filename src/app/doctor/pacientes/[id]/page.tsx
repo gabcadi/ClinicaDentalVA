@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import * as Icons from 'lucide-react';
-import { getPatients } from '@/lib/api/patients';
-import { getUsers } from '@/lib/api/users';
+import { getPatientById } from '@/lib/api/patients';
+import { getUserById } from '@/lib/api/users';
 import { Patient, User } from '@/lib/types/interfaces';
 
 export default function PacienteDetalle() {
@@ -13,37 +13,42 @@ export default function PacienteDetalle() {
   const id = params?.id;
 
   const [paciente, setPaciente] = useState<Patient | null>(null);
-  const [users, setUsers] = useState<User[]>([]); 
+  const [user, setUser] = useState<User | null>(null); 
 
-  useEffect(() => {
-    const fetchPaciente = async () => {
+useEffect(() => {
+  const fetchPaciente = async () => {
+    try {
+      const data = await getPatientById(id);
+      setPaciente(data);  
+    } catch (error) {
+      console.error('Error fetching patient:', error);
+    }
+  };
+
+  fetchPaciente();
+}, [id]);
+
+useEffect(() => {
+  const fetchUser = async () => {
+    if (paciente?.userId) { 
       try {
-        const data = await getPatients(id);
-        setPaciente(data);
+        const userData = await getUserById(paciente.userId);
+        setUser(userData);
       } catch (error) {
-        console.error('Error fetching patient:', error);
+        console.error('Error fetching user:', error);
       }
-    };
+    }
+  };
 
-    const fetchUsers = async () => {
-      try {
-        const data = await getUsers();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    };
-
-    fetchPaciente();
-    fetchUsers();
-  }, [id]);
+  fetchUser();
+}, [paciente]); 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12 font-[var(--font-dmsans)]">
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-sky-700 tracking-tight">Paciente</h1>
-          <p className="text-slate-500 mt-2 text-lg">Cédula: {id}</p>
+          <p className="text-slate-500 mt-2 text-lg">Cédula: {paciente?.id}</p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -52,12 +57,12 @@ export default function PacienteDetalle() {
               <Icons.User className="w-5 h-5" /> Información General
             </h2>
             <ul className="space-y-3 text-gray-700">
-              <li><span className="font-medium">Nombre: </span> </li>
-              <li><span className="font-medium">Edad: </span> </li>
-              <li><span className="font-medium">Cédula:</span> </li>
-              <li><span className="font-medium">Teléfono:</span> </li>
-              <li><span className="font-medium">Correo:</span> </li>
-              <li><span className="font-medium">Dirección:</span> </li>
+              <li><span className="font-medium">Nombre: </span> {user?.fullName}</li>
+              <li><span className="font-medium">Edad: </span> {paciente?.age}</li>
+              <li><span className="font-medium">Cédula:</span> {paciente?.id}</li>
+              <li><span className="font-medium">Teléfono:</span> {paciente?.phone}</li>
+              <li><span className="font-medium">Correo:</span> {user?.email}</li>
+              <li><span className="font-medium">Dirección:</span> {paciente?.address}</li>
             </ul>
           </div>
 

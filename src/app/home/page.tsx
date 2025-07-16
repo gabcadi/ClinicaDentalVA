@@ -23,7 +23,7 @@ const HomePage = () => {
   const services = [
     { icon: Star, title: 'Ortodoncia', desc: 'Sonrisas perfectas con tecnología avanzada', color: 'from-blue-500 to-cyan-500' },
     { icon: Sparkles, title: 'Blanqueamiento', desc: 'Dientes más blancos en una sola sesión', color: 'from-purple-500 to-pink-500' },
-    { icon: Shield, title: 'Impl  antes', desc: 'Soluciones permanentes de última generación', color: 'from-emerald-500 to-teal-500' },
+    { icon: Shield, title: 'Implantes', desc: 'Soluciones permanentes de última generación', color: 'from-emerald-500 to-teal-500' },
     { icon: Award, title: 'Estética Dental', desc: 'Diseño de sonrisa personalizado', color: 'from-amber-500 to-orange-500' }
   ];
 

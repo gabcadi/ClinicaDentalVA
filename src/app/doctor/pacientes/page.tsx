@@ -42,7 +42,7 @@ export default function PacientesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-10">
           <h1 className="text-4xl font-bold text-sky-700">Gestión de Pacientes</h1>
           <Link href="/doctor/pacientes/nuevo">
-            <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-md">
+            <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-sky-500 to-sky-600 hover:to-sky-700 text-white shadow-md cursor-pointer">
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Paciente
             </Button>
@@ -85,15 +85,15 @@ export default function PacientesPage() {
                 </tr>
               ) : (
                 pacientes.map((paciente) => (
-                  <tr key={paciente.id} className="hover:bg-sky-50">
+                  <tr key={paciente._id} className="hover:bg-sky-50">
                     <td className="px-6 py-4 text-sm text-gray-700 font-medium">{users.find(user => user._id === paciente.userId)?.fullName}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.id}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.age}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.phone}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.address}</td>
                     <td className="px-6 py-4 text-right">
-                      <Link href={`/doctor/pacientes/${paciente.id}`}>
-                        <Button variant="outline" className="text-sky-600 border-sky-300 hover:bg-sky-50">
+                      <Link href={`/doctor/pacientes/${paciente._id}`}>
+                        <Button variant="outline" className="text-sky-600 border-sky-300 hover:bg-sky-50 cursor-pointer">
                           Ver más <ArrowRight className="w-4 h-4 ml-1" />
                         </Button>
                       </Link>

@@ -61,20 +61,33 @@ const UserButton = () => {
 							<>
 								<DropdownMenuItem
 									className="h-10 text-sky-700 font-semibold cursor-pointer"
-									onClick={() => router.push('/admin/appointments')}
+									onClick={() => router.push('/admin')}
+								>
+									Panel Admin
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									className="h-10 text-sky-700 font-semibold cursor-pointer"
+									onClick={() => router.push('/admin/users')}
+								>
+									Gestion de usuarios
+								</DropdownMenuItem>
+								
+							</>
+						)}
+						{session.user?.role === 'doctor' && (
+							<>
+							<DropdownMenuItem
+									className="h-10 text-sky-700 font-semibold cursor-pointer"
+									onClick={() => router.push('/doctor/appointments')}
 								>
 									Administrar citas
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className="h-10 text-sky-700 font-semibold cursor-pointer"
-									onClick={() => router.push('/admin/calendar')}
+									onClick={() => router.push('/doctor/calendar')}
 								>
 									Calendario
 								</DropdownMenuItem>
-							</>
-						)}
-						{session.user?.role === 'doctor' && (
-							<>
 								<DropdownMenuItem
 									className="h-10 text-sky-700 font-semibold cursor-pointer"
 									onClick={() => router.push('/doctor')}

@@ -5,33 +5,36 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowRight, Search } from 'lucide-react';
 import { getPatients } from '@/lib/api/patients';
-import { ObjectId } from 'mongodb';
-
-interface Paciente {
-	age: number;
-	id: string;
-	phone: string;
-	address: string;
-  userId: ObjectId; 
-}
+import { getUsers } from '@/lib/api/users';
+import { Patient, User } from '@/lib/types/interfaces';
 
 export default function PacientesPage() {
-  
+  const [pacientes, setPacientes] = useState<Patient[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [busqueda, setBusqueda] = useState<string>('');
+
   useEffect(() => {
     const fetchPatients = async () => {
       try {
         const data = await getPatients();
         setPacientes(data);
-        console.log('Pacientes fetched successfully:', data);
       } catch (error) {
         console.error('Error fetching patients:', error);
       }
     };
-    fetchPatients();
-  }, []);
 
-  const [pacientes, setPacientes] = useState([]);
-  const [busqueda, setBusqueda] = useState('');
+    const fetchUsers = async () => {
+      try {
+        const data = await getUsers();
+        setUsers(data);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    }
+
+    fetchPatients();
+    fetchUsers();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
@@ -83,7 +86,7 @@ export default function PacientesPage() {
               ) : (
                 pacientes.map((paciente) => (
                   <tr key={paciente.id} className="hover:bg-sky-50">
-                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{users.find(user => user._id === paciente.userId)?.fullName}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.id}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.age}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.phone}</td>

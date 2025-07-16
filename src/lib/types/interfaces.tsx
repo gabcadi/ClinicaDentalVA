@@ -1,11 +1,12 @@
 import { ObjectId } from 'mongodb';
 
 export interface Patient {
+    _id: ObjectId | string;
     age: number;
     id: string;
     phone: string;
     address: string;
-    userId: ObjectId; 
+    userId: ObjectId | string; 
     createdAt: Date;
     updatedAt: Date;  
 }

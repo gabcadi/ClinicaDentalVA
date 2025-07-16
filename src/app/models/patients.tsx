@@ -1,7 +1,6 @@
 import mongoose, { Document, Model, ObjectId, Schema } from 'mongoose';
 
 interface Patient extends Document {
-	_id: ObjectId; 
 	age: number;
 	id: string;
 	phone: string;
@@ -12,7 +11,6 @@ interface Patient extends Document {
 }
 
 const patientSchema = new Schema<Patient>({
-	_ide: { type: mongoose.Schema.Types.ObjectId, auto: true },
 	age: { type: Number, required: true },
 	id: { type: String, required: true, unique: true },
 	phone: { type: String, required: true },

@@ -15,3 +15,11 @@ export const getPatientById = async (id: string) => {
   }
   return res.data;
 };
+
+export const deletePatient = async (id: string) => {
+  const res = await api.delete(`/patients/${id}`);
+  if (res.status !== 200) {
+    throw new Error(`Error deleting patient with ID ${id}`);
+  }
+  return res.data;
+};

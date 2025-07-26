@@ -49,9 +49,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-100 px-6 py-12">
       <div className="max-w-7xl mx-auto">
         <header className="mb-16 text-center">
-          <h1 className="text-4xl font-bold text-sky-700">Clínica Vargas Araya - Panel Médico</h1>
-          <p className="text-slate-600 mt-2 text-lg">Hola Doc!</p>
-          <p className="text-slate-600 mt-2 text-lg">Gestión clínica moderna y segura para tus pacientes</p>
+          <h1 className="text-4xl font-bold text-sky-700">¡Hola Doc! - Bienvenido al Panel Médico</h1>
+          <p className="text-slate-600 mt-2 text-lg">Clínica Dental Vargas Araya</p>
         </header>
 
         {/* Card Principal PACIENTES  */}
@@ -71,7 +70,7 @@ export default function HomePage() {
                 </div>
               </div>
               <Link href="/doctor/pacientes">
-                <Button className="bg-sky-600 hover:bg-sky-700 text-white rounded-md px-6 h-12">
+                <Button className="bg-sky-600 hover:bg-sky-700 cursor-pointer text-white rounded-md px-6 h-12">
                   Ir al módulo de pacientes
                 </Button>
               </Link>

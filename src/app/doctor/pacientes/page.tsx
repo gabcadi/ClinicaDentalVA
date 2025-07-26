@@ -3,38 +3,60 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowRight, Search } from 'lucide-react';
-import { getPatients } from '@/lib/api/patients';
+import { Plus, ArrowRight, Search, Trash2 } from 'lucide-react';
+import { getPatients, deletePatient } from '@/lib/api/patients';
 import { getUsers } from '@/lib/api/users';
 import { Patient, User } from '@/lib/types/interfaces';
+import { toast } from 'sonner';
 
 export default function PacientesPage() {
   const [pacientes, setPacientes] = useState<Patient[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [busqueda, setBusqueda] = useState<string>('');
+  const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const data = await getPatients();
-        setPacientes(data);
-      } catch (error) {
-        console.error('Error fetching patients:', error);
-      }
-    };
-
-    const fetchUsers = async () => {
-      try {
-        const data = await getUsers();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    }
-
-    fetchPatients();
-    fetchUsers();
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      const [patientsData, usersData] = await Promise.all([
+        getPatients(),
+        getUsers()
+      ]);
+      setPacientes(patientsData);
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Error al cargar los datos');
+    }
+  };
+
+  const handleDeletePatient = async (id: string) => {
+    setDeleteLoading(true);
+    try {
+      await deletePatient(id);
+      
+      // Actualizar la lista de pacientes sin recargar
+      setPacientes(pacientes.filter(paciente => paciente._id?.toString() !== id));
+      toast.success('Paciente eliminado exitosamente');
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      toast.error('Error al eliminar el paciente');
+    } finally {
+      setShowConfirmDelete(null);
+      setDeleteLoading(false);
+    }
+  };
+
+  // Filtrado en frontend (opcional)
+  const filteredPacientes = pacientes.filter(paciente => {
+    const nombreUsuario = users.find(user => user._id.toString() === paciente.userId?.toString())?.fullName?.toLowerCase() || '';
+    return nombreUsuario.includes(busqueda.toLowerCase()) || 
+           paciente.id.toLowerCase().includes(busqueda.toLowerCase());
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
@@ -42,7 +64,7 @@ export default function PacientesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-10">
           <h1 className="text-4xl font-bold text-sky-700">Gestión de Pacientes</h1>
           <Link href="/doctor/pacientes/nuevo">
-            <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-md">
+            <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-sky-500 to-sky-600 hover:to-sky-700 text-white shadow-md cursor-pointer">
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Paciente
             </Button>
@@ -73,30 +95,66 @@ export default function PacientesPage() {
                 <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Edad</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Teléfono</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Dirección</th>
-                <th className="px-6 py-3"></th>
+                <th className="px-6 py-3 text-center text-sm font-semibold text-sky-700">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {pacientes.length === 0 ? (
+              {filteredPacientes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-slate-500">
+                  <td colSpan={6} className="text-center py-6 text-slate-500">
                     No se encontraron pacientes.
                   </td>
                 </tr>
               ) : (
-                pacientes.map((paciente) => (
-                  <tr key={paciente.id} className="hover:bg-sky-50">
-                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{users.find(user => user._id === paciente.userId)?.fullName}</td>
+                filteredPacientes.map((paciente) => (
+                  <tr key={paciente._id?.toString()} className="hover:bg-sky-50">
+                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                      {users.find(user => user._id?.toString() === paciente.userId?.toString())?.fullName}
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.id}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.age}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.phone}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.address}</td>
-                    <td className="px-6 py-4 text-right">
-                      <Link href={`/doctor/pacientes/${paciente.id}`}>
-                        <Button variant="outline" className="text-sky-600 border-sky-300 hover:bg-sky-50">
-                          Ver más <ArrowRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      </Link>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-2">
+                        {showConfirmDelete === paciente._id?.toString() ? (
+                          <div className="flex gap-1 items-center bg-red-50 px-2 py-1 rounded-md border border-red-200">
+                            <span className="text-xs text-red-700">¿Confirmar?</span>
+                            <Button 
+                              variant="destructive" 
+                              className="h-7 px-2 text-xs bg-red-600 hover:bg-red-700"
+                              onClick={() => handleDeletePatient(paciente._id?.toString() || '')}
+                              disabled={deleteLoading}
+                            >
+                              {deleteLoading ? 
+                                <div className="animate-spin h-3 w-3 border-2 border-white rounded-full border-r-transparent"></div> 
+                                : 'Sí'
+                              }
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              className="h-7 px-2 text-xs border-red-300"
+                              onClick={() => setShowConfirmDelete(null)}
+                              disabled={deleteLoading}
+                            >
+                              No
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            className="text-red-600 border-red-300 hover:bg-red-50 cursor-pointer"
+                            onClick={() => setShowConfirmDelete(paciente._id?.toString() || '')}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Link href={`/doctor/pacientes/${paciente._id}`}>
+                          <Button variant="outline" className="text-sky-600 border-sky-300 hover:bg-sky-50 cursor-pointer">
+                            Ver más <ArrowRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))

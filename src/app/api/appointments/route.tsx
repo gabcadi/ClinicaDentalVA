@@ -19,25 +19,25 @@ export async function POST(request: Request) {
 
     const email = process.env.EMAIL_USER || '';
     
-    await sendEmail(
-      email,
-      'Cita Agendada en Clínica Vargas Araya',
-      `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
-        <h2 style="text-align: center; color: #007bff;">Clínica Vargas Araya</h2>
-        <p style="text-align: center; font-size: 16px; color: #333;">¡Tu cita ha sido agendada exitosamente!</p>
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-        <div style="font-size: 16px; color: #333;">
-          <p><strong>Fecha:</strong> ${date}</p>
-          <p><strong>Hora:</strong> ${time}</p>
-          <p><strong>Descripción:</strong> ${description}</p>
-        </div>
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-        <p style="text-align: center; font-size: 14px; color: #555;">Gracias por confiar en nosotros. Te llegará un recordatorio un día antes de tu cita.</p>
-        <p style="text-align: center; font-size: 12px; color: #999;">Clínica Vargas Araya, San José, Costa Rica</p>
-      </div>
-      `
-    );
+    // await sendEmail(
+    //   email,
+    //   'Cita Agendada en Clínica Vargas Araya',
+    //   `
+    //   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+    //     <h2 style="text-align: center; color: #007bff;">Clínica Vargas Araya</h2>
+    //     <p style="text-align: center; font-size: 16px; color: #333;">¡Tu cita ha sido agendada exitosamente!</p>
+    //     <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+    //     <div style="font-size: 16px; color: #333;">
+    //       <p><strong>Fecha:</strong> ${date}</p>
+    //       <p><strong>Hora:</strong> ${time}</p>
+    //       <p><strong>Descripción:</strong> ${description}</p>
+    //     </div>
+    //     <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+    //     <p style="text-align: center; font-size: 14px; color: #555;">Gracias por confiar en nosotros. Te llegará un recordatorio un día antes de tu cita.</p>
+    //     <p style="text-align: center; font-size: 12px; color: #999;">Clínica Vargas Araya, San José, Costa Rica</p>
+    //   </div>
+    //   `
+    // );
 
     const reminderDate = new Date(date);
     reminderDate.setDate(reminderDate.getDate() - 1); 
@@ -72,7 +72,15 @@ export async function POST(request: Request) {
 export const GET = async (req: Request) => {
   try {
     await connectDB();
-    const appointments = await Appointment.find().sort({ date: 1, time: 1 });
+    
+    // Obtener parámetros de consulta
+    const url = new URL(req.url);
+    const patientId = url.searchParams.get('patientId');
+    
+    // Construir filtro
+    const filter = patientId ? { patientId } : {};
+    
+    const appointments = await Appointment.find(filter).sort({ date: -1, time: -1 });
     return NextResponse.json(appointments, { status: 200 });
   } catch (error) {
     console.error('Error al obtener las citas:', error);

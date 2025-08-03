@@ -6,7 +6,7 @@ export interface Patient {
     id: string;
     phone: string;
     address: string;
-    userId: ObjectId | string; 
+    userId: ObjectId | string | User; // Puede ser ID o objeto User populado
     createdAt: Date;
     updatedAt: Date;  
 }

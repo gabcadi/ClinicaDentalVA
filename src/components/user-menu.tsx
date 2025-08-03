@@ -84,12 +84,6 @@ const UserButton = () => {
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className="h-10 text-sky-700 font-semibold cursor-pointer"
-									onClick={() => router.push('/doctor/appointments')}
-								>
-									Administrar citas
-								</DropdownMenuItem>
-								<DropdownMenuItem
-									className="h-10 text-sky-700 font-semibold cursor-pointer"
 									onClick={() => router.push('/doctor/calendar')}
 								>
 									Calendario

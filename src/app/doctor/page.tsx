@@ -8,9 +8,9 @@ import Link from 'next/link';
 const features = [
   {
     icon: <FileText className="w-6 h-6 text-sky-600" />,
-    title: 'Recetas médicas',
-    description: 'Visualiza y consulta las recetas emitidas en consultas anteriores.',
-    href: '/recetas',
+    title: 'Citas médicas',
+    description: 'Visualiza y consulta las citas médicas programadas.',
+    href: '/doctor/appointments',
   },
   {
     icon: <ClipboardList className="w-6 h-6 text-sky-600" />,
@@ -27,8 +27,8 @@ const features = [
   {
     icon: <Calendar className="w-6 h-6 text-sky-600" />,
     title: 'Reportes médicos',
-    description: 'Genera reportes detallados para un diagnóstico claro.',
-    href: '/reportes',
+    description: 'Visualiza un calendario detallado de citas médicas.',
+    href: '/doctor/calendar',
   },
   {
     icon: <ImageIcon className="w-6 h-6 text-sky-600" />,
@@ -92,7 +92,7 @@ export default function HomePage() {
               <CardContent>
                 <p className="text-slate-600 text-sm mb-4">{feature.description}</p>
                 <Link href={feature.href}>
-                  <Button variant="outline" className="text-sky-600 border-sky-400 hover:bg-sky-50">
+                  <Button variant="outline" className="text-sky-600 border-sky-400 cursor-pointer hover:bg-sky-50">
                     Ir al módulo
                   </Button>
                 </Link>

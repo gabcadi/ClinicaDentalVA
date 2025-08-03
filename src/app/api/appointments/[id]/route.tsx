@@ -2,10 +2,33 @@ import { NextResponse } from 'next/server';
 import connectDB from '../../../utils/mongodb';
 import Appointment from '../../../models/appointments';
 
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  try {
+    await connectDB();
+    
+    const { id } = await params;
+    
+    if (!id) {
+      return NextResponse.json({ message: 'ID de cita requerido' }, { status: 400 });
+    }
+
+    const appointment = await Appointment.findById(id);
+    
+    if (!appointment) {
+      return NextResponse.json({ message: 'Cita no encontrada' }, { status: 404 });
+    }
+
+    return NextResponse.json(appointment, { status: 200 });
+  } catch (error) {
+    console.error('Error al obtener la cita:', error);
+    return NextResponse.json({ message: 'Error al obtener la cita' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
 	try {
 		await connectDB();
-		const { id } = params;
+		const { id } = await params;
 
 		if (!id) {
 			return NextResponse.json({ message: 'ID de la cita es requerido' }, { status: 400 });
@@ -23,19 +46,19 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 	}
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
     await connectDB();
-    const { id } = params;
-    const { description, date, time, confirmed } = await request.json();
+    const { id } = await params;
+    const { description, date, time, confirmed, materials, doctorReport, totalPrice } = await request.json();
 
-    if (!id || !description || !date || !time) {
+    if (!id || !description || !date || !time || confirmed === undefined || !materials || !doctorReport || !totalPrice) {
       return NextResponse.json({ message: 'Todos los campos son obligatorios' }, { status: 400 });
     }
 
     const updatedAppointment = await Appointment.findByIdAndUpdate(
       id,
-      { description, date, time, confirmed },
+      { description, date, time, confirmed, materials, doctorReport, totalPrice },
       { new: true }
     );
 

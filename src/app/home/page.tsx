@@ -80,7 +80,6 @@ const HomePage = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  onClick={() => document.getElementById('appointment')?.scrollIntoView({ behavior: 'smooth' })}
                   className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group"
                 >
                   <span>Agenda tu cita</span>

@@ -8,6 +8,12 @@ import { getPatients, deletePatient } from '@/lib/api/patients';
 import { getUsers } from '@/lib/api/users';
 import { Patient, User } from '@/lib/types/interfaces';
 import { toast } from 'sonner';
+import { TableSkeleton } from '@/components/ui/loading-skeletons';
+
+// Type guard para verificar si userId es un objeto User
+const isUser = (userId: any): userId is User => {
+  return userId && typeof userId === 'object' && 'fullName' in userId;
+};
 
 export default function PacientesPage() {
   const [pacientes, setPacientes] = useState<Patient[]>([]);
@@ -15,12 +21,14 @@ export default function PacientesPage() {
   const [busqueda, setBusqueda] = useState<string>('');
   const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const [patientsData, usersData] = await Promise.all([
         getPatients(),
@@ -31,6 +39,8 @@ export default function PacientesPage() {
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Error al cargar los datos');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,30 +96,36 @@ export default function PacientesPage() {
         </div>
 
         {/* Tabla de pacientes */}
-        <div className="overflow-x-auto bg-white shadow-lg border border-gray-200 rounded-xl">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-sky-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Nombre</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Cédula</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Edad</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Teléfono</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Dirección</th>
-                <th className="px-6 py-3 text-center text-sm font-semibold text-sky-700">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredPacientes.length === 0 ? (
+        {loading ? (
+          <TableSkeleton rows={5} cols={6} />
+        ) : (
+          <div className="overflow-x-auto bg-white shadow-lg border border-gray-200 rounded-xl">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-sky-100">
                 <tr>
-                  <td colSpan={6} className="text-center py-6 text-slate-500">
-                    No se encontraron pacientes.
-                  </td>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Nombre</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Cédula</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Edad</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Teléfono</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-sky-700">Dirección</th>
+                  <th className="px-6 py-3 text-center text-sm font-semibold text-sky-700">Acciones</th>
                 </tr>
-              ) : (
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredPacientes.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-6 text-slate-500">
+                      No se encontraron pacientes.
+                    </td>
+                  </tr>
+                ) : (
                 filteredPacientes.map((paciente) => (
                   <tr key={paciente._id?.toString()} className="hover:bg-sky-50">
                     <td className="px-6 py-4 text-sm text-gray-700 font-medium">
-                      {users.find(user => user._id?.toString() === paciente.userId?.toString())?.fullName}
+                      {isUser(paciente.userId) 
+                        ? paciente.userId.fullName 
+                        : users.find(user => user._id?.toString() === paciente.userId?.toString())?.fullName || 'No disponible'
+                      }
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.id}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{paciente.age}</td>
@@ -162,6 +178,7 @@ export default function PacientesPage() {
             </tbody>
           </table>
         </div>
+        )}
       </div>
     </div>
   );

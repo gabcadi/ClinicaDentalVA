@@ -5,13 +5,21 @@ interface IAppointment extends Document {
   date: string;
   time: string;
   confirmed?: boolean;
+  patientId?: mongoose.Types.ObjectId;
+  materials?: string[];
+  doctorReport?: string;
+  totalPrice?: number;
 }
 
 const appointmentSchema = new Schema<IAppointment>({
   description: { type: String, required: true },
   date: { type: String, required: true },
   time: { type: String, required: true },
-  confirmed: { type: Boolean, default: false }
+  confirmed: { type: Boolean, default: false },
+  patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient' },
+  materials: { type: [String], default: [] },
+  doctorReport: { type: String, default: '' },
+  totalPrice: { type: Number, default: 0 }
 });
 
 const Appointment: Model<IAppointment> =

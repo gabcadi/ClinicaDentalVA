@@ -3,7 +3,7 @@ import connectDB from '../../../utils/mongodb';
 import User from '../../../models/users';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = await params;
   try {
     await connectDB();
     const user = await User.findById(id);

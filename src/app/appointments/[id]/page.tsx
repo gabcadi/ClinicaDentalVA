@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { 
   Calendar, 
   Clock, 
@@ -19,6 +21,9 @@ import {
   Share2,
   Edit3
 } from 'lucide-react';
+import { getPatientById } from '@/lib/api/patients';
+import { getUserById } from '@/lib/api/users';
+import { Patient, User as UserType } from '@/lib/types/interfaces';
 
 interface Appointment {
   _id: string;
@@ -26,26 +31,30 @@ interface Appointment {
   date: string;
   time: string;
   confirmed?: boolean;
+  patientId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export default function AppointmentDetail({ appointmentId = "683f59803cc1403b3a23af26" }) {
+// Type guard para verificar si userId es un objeto User
+const isUser = (userId: any): userId is UserType => {
+  return userId && typeof userId === 'object' && 'fullName' in userId;
+};
+
+export default function AppointmentDetail() {
+  const params = useParams();
+  const appointmentId = params?.id as string;
+  
   const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Datos mock para las funcionalidades futuras
-  const mockPatientData = {
-    name: "Ana García Rodríguez",
-    email: "ana.garcia@email.com",
-    phone: "+506 8888-8888",
-    age: 32,
-    bloodType: "O+",
-    allergies: ["Penicilina", "Acido hialuronico"],
-    emergencyContact: "Carlos García - +506 7777-7777"
-  };
-
+  // Datos mock para las funcionalidades futuras que aún no tienen backend
   const mockDoctorData = {
     name: "Dr. Roberto Méndez",
-    specialty: "Medicina General",
+    specialty: "Medicina General", 
+    license: "12345",
     experience: "15 años",
     rating: 4.9,
     bio: "Especialista en medicina preventiva con más de 15 años de experiencia. Graduado de la Universidad de Costa Rica con especialización en medicina familiar.",
@@ -78,21 +87,53 @@ export default function AppointmentDetail({ appointmentId = "683f59803cc1403b3a2
 
   useEffect(() => {
     const fetchAppointment = async () => {
+      if (!appointmentId) return;
+      
       try {
-        // Simular llamada a API usando el ID proporcionado
-        setTimeout(() => {
-          setAppointment({
-            _id: appointmentId,
-            description: "Consulta médica general - Revisión periódica",
-            date: "2025-06-05",
-            time: "18:22",
-            confirmed: true,
-            __v: 0
-          });
-          setLoading(false);
-        }, 1000);
+        setLoading(true);
+        console.log('Fetching appointment with ID:', appointmentId);
+        
+        // Obtener la cita
+        const appointmentResponse = await fetch(`/api/appointments/${appointmentId}`);
+        console.log('Appointment response status:', appointmentResponse.status);
+        console.log('Appointment response URL:', appointmentResponse.url);
+        
+        if (!appointmentResponse.ok) {
+          const errorText = await appointmentResponse.text();
+          console.log('Appointment error response:', errorText);
+          throw new Error(`Error ${appointmentResponse.status}: ${errorText}`);
+        }
+        
+        const appointmentData = await appointmentResponse.json();
+        console.log('Appointment data received:', appointmentData);
+        setAppointment(appointmentData);
+        
+        // Obtener el paciente
+        if (appointmentData.patientId) {
+          console.log('Fetching patient with ID:', appointmentData.patientId);
+          try {
+            const patientData = await getPatientById(appointmentData.patientId);
+            console.log('Patient data received:', patientData);
+            setPatient(patientData);
+            
+            // Obtener los datos del usuario si no están populados
+            if (patientData.userId && !isUser(patientData.userId)) {
+              console.log('Fetching user with ID:', patientData.userId);
+              const userData = await getUserById(patientData.userId.toString());
+              console.log('User data received:', userData);
+              setUser(userData);
+            } else if (isUser(patientData.userId)) {
+              console.log('User data already populated:', patientData.userId);
+              setUser(patientData.userId);
+            }
+          } catch (patientError) {
+            console.error('Error fetching patient or user data:', patientError);
+            // Continuar mostrando la cita aunque no se pueda cargar el paciente
+          }
+        }
       } catch (error) {
         console.error('Error fetching appointment:', error);
+      } finally {
         setLoading(false);
       }
     };
@@ -156,11 +197,11 @@ export default function AppointmentDetail({ appointmentId = "683f59803cc1403b3a2
       {/* Header */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
-          <button className="flex items-center gap-3 text-cyan-400 hover:text-cyan-300 transition-colors group">
+          <button   className="flex items-center gap-3 text-cyan-400 hover:text-cyan-300 transition-colors group">
             <div className="w-10 h-10 bg-cyan-500/20 rounded-full flex items-center justify-center group-hover:bg-cyan-500/30 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </div>
-            <span className="font-medium">Volver a citas</span>
+            <Link href={`/doctor/pacientes/${appointment.patientId}/citas`}>Volver a citas</Link>
           </button>
 
           <div className="flex items-center gap-4">
@@ -248,8 +289,9 @@ export default function AppointmentDetail({ appointmentId = "683f59803cc1403b3a2
 
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-                <span className="text-gray-300">Nombre completo</span>
-                <span className="text-white font-semibold">{mockPatientData.name}</span>
+                <span className="text-white font-semibold">
+                  {user?.fullName || 'Información no disponible'}
+                </span>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -258,7 +300,9 @@ export default function AppointmentDetail({ appointmentId = "683f59803cc1403b3a2
                     <Mail className="w-4 h-4 text-blue-400" />
                     <span className="text-gray-300 text-sm">Email</span>
                   </div>
-                  <span className="text-white font-mono text-sm">{mockPatientData.email}</span>
+                  <span className="text-white font-mono text-sm">
+                    {user?.email || 'No disponible'}
+                  </span>
                 </div>
                 
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
@@ -266,30 +310,43 @@ export default function AppointmentDetail({ appointmentId = "683f59803cc1403b3a2
                     <Phone className="w-4 h-4 text-green-400" />
                     <span className="text-gray-300 text-sm">Teléfono</span>
                   </div>
-                  <span className="text-white font-mono text-sm">{mockPatientData.phone}</span>
+                  <span className="text-white font-mono text-sm">
+                    {patient?.phone || 'No disponible'}
+                  </span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
                   <span className="text-gray-300 text-sm block mb-1">Edad</span>
-                  <span className="text-white font-bold text-lg">{mockPatientData.age} años</span>
+                  <span className="text-white font-bold text-lg">
+                    {patient?.age ? `${patient.age} años` : 'No disponible'}
+                  </span>
                 </div>
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-                  <span className="text-gray-300 text-sm block mb-1">Tipo de sangre</span>
-                  <span className="text-red-400 font-bold text-lg">{mockPatientData.bloodType}</span>
+                  <span className="text-gray-300 text-sm block mb-1">Cédula</span>
+                  <span className="text-blue-400 font-bold text-lg">
+                    {patient?.id || 'No disponible'}
+                  </span>
                 </div>
               </div>
 
-              <div className="p-4 bg-orange-500/10 rounded-xl border border-orange-500/30">
-                <h4 className="text-orange-300 font-semibold mb-2">Alergias conocidas</h4>
-                <div className="flex flex-wrap gap-2">
-                  {mockPatientData.allergies.map((allergy, index) => (
-                    <span key={index} className="bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full text-sm">
-                      {allergy}
-                    </span>
-                  ))}
+              <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="w-4 h-4 text-purple-400" />
+                  <span className="text-gray-300 text-sm">Dirección</span>
                 </div>
+                <span className="text-white text-sm">
+                  {patient?.address || 'No disponible'}
+                </span>
+              </div>
+
+              {/* Nota: Alergias y tipo de sangre son datos que no tenemos aún en el modelo */}
+              <div className="p-4 bg-orange-500/10 rounded-xl border border-orange-500/30">
+                <h4 className="text-orange-300 font-semibold mb-2">Información Médica</h4>
+                <p className="text-orange-200 text-sm">
+                  Los datos médicos detallados (alergias, tipo de sangre) se añadirán en futuras actualizaciones del sistema.
+                </p>
               </div>
             </div>
           </div>

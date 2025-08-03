@@ -8,7 +8,7 @@ export async function PUT(
 ) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
     const { role } = await request.json();
 
     // Validar rol

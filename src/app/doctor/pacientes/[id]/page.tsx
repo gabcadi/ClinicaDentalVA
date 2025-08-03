@@ -1,27 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import * as Icons from 'lucide-react';
 import { getPatientById } from '@/lib/api/patients';
 import { getUserById } from '@/lib/api/users';
 import { Patient, User } from '@/lib/types/interfaces';
+import Link from 'next/link';
+import { PatientPageSkeleton, InlineTextSkeleton } from '@/components/ui/loading-skeletons';
+
+// Type guard para verificar si userId es un objeto User
+const isUser = (userId: any): userId is User => {
+  return userId && typeof userId === 'object' && 'fullName' in userId;
+};
 
 export default function PacienteDetalle() {
   const params = useParams();
-  const id = params?.id;
+  const id = params?.id as string;
 
   const [paciente, setPaciente] = useState<Patient | null>(null);
   const [user, setUser] = useState<User | null>(null); 
+  const [loadingPatient, setLoadingPatient] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(false);
 
 useEffect(() => {
   const fetchPaciente = async () => {
+    if (!id) return;
+    
+    setLoadingPatient(true);
     try {
       const data = await getPatientById(id);
       setPaciente(data);  
     } catch (error) {
       console.error('Error fetching patient:', error);
+    } finally {
+      setLoadingPatient(false);
     }
   };
 
@@ -31,17 +45,31 @@ useEffect(() => {
 useEffect(() => {
   const fetchUser = async () => {
     if (paciente?.userId) { 
+      setLoadingUser(true);
       try {
-        const userData = await getUserById(paciente.userId);
-        setUser(userData);
+        // Si userId ya es un objeto User (populado), usarlo directamente
+        if (isUser(paciente.userId)) {
+          setUser(paciente.userId);
+        } else {
+          // Si es un ObjectId, hacer la petición API
+          const userId = typeof paciente.userId === 'object' ? paciente.userId.toString() : paciente.userId;
+          const userData = await getUserById(userId);
+          setUser(userData);
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
+      } finally {
+        setLoadingUser(false);
       }
     }
   };
 
   fetchUser();
-}, [paciente]); 
+}, [paciente]);
+
+if (loadingPatient) {
+  return <PatientPageSkeleton />;
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12 font-[var(--font-dmsans)]">
@@ -57,11 +85,25 @@ useEffect(() => {
               <Icons.User className="w-5 h-5" /> Información General
             </h2>
             <ul className="space-y-3 text-gray-700">
-              <li><span className="font-medium">Nombre: </span> {user?.fullName}</li>
+              <li>
+                <span className="font-medium">Nombre: </span> 
+                {loadingUser ? (
+                  <InlineTextSkeleton width="w-32" />
+                ) : (
+                  user?.fullName || 'No disponible'
+                )}
+              </li>
               <li><span className="font-medium">Edad: </span> {paciente?.age}</li>
               <li><span className="font-medium">Cédula:</span> {paciente?.id}</li>
               <li><span className="font-medium">Teléfono:</span> {paciente?.phone}</li>
-              <li><span className="font-medium">Correo:</span> {user?.email}</li>
+              <li>
+                <span className="font-medium">Correo:</span> 
+                {loadingUser ? (
+                  <InlineTextSkeleton width="w-40" />
+                ) : (
+                  ` ${user?.email || 'No disponible'}`
+                )}
+              </li>
               <li><span className="font-medium">Dirección:</span> {paciente?.address}</li>
             </ul>
           </div>
@@ -69,14 +111,31 @@ useEffect(() => {
           <div className="bg-gradient-to-tr from-sky-600 to-sky-500 text-white rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg">
             <Icons.CalendarPlus className="w-10 h-10 mb-4" />
             <h3 className="text-lg font-semibold mb-2">¿Deseas agendar una cita?</h3>
-            <Button className="bg-white text-sky-600 hover:bg-gray-100 w-full mt-2 rounded-full font-semibold">
-              Crear nueva cita
-            </Button>
+            {loadingPatient ? (
+              <div className="w-full h-10 bg-white/20 rounded-full animate-pulse"></div>
+            ) : (
+              <Button className="bg-white cursor-pointer text-sky-600 hover:bg-gray-100 w-full mt-2 rounded-full font-semibold">
+                <Link href={`/appointments/create?patientId=${paciente?._id}`}>
+                  Crear nueva cita
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CardItem icon={<Icons.Stethoscope className="w-5 h-5" />} title="Historial Médico" description="Aún no hay registros disponibles." />
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+            <div className="flex items-center gap-3 mb-3 text-sky-600">
+              <Icons.Stethoscope className="w-5 h-5" />
+              <h3 className="text-lg font-semibold">Historial Médico</h3>
+            </div>
+            <p className="text-slate-600 text-sm mb-4">Consulta todas las citas médicas registradas para este paciente.</p>
+            <Link href={`/doctor/pacientes/${paciente?._id}/citas`}>
+              <Button className="w-full cursor-pointer bg-sky-600 hover:bg-sky-700 text-white">
+                Ver Historial de Citas
+              </Button>
+            </Link>
+          </div>
           <CardItem icon={<Icons.ImageIcon className="w-5 h-5" />} title="Imágenes Médicas" description="No se han cargado imágenes." />
           <CardItem icon={<Icons.FileText className="w-5 h-5" />} title="Recetas" description="No hay recetas activas." />
           <CardItem icon={<Icons.FolderOpen className="w-5 h-5" />} title="Documentos Adjuntos" description="Sin archivos registrados." />
@@ -86,7 +145,7 @@ useEffect(() => {
   );
 }
 
-function CardItem({ icon, title, description }: { icon: JSX.Element; title: string; description: string }) {
+function CardItem({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
       <div className="flex items-center gap-3 mb-3 text-sky-600">

@@ -7,6 +7,7 @@ import * as Icons from 'lucide-react';
 import { getPatientById } from '@/lib/api/patients';
 import { getUserById } from '@/lib/api/users';
 import { Patient, User } from '@/lib/types/interfaces';
+import Link from 'next/link';
 
 export default function PacienteDetalle() {
   const params = useParams();
@@ -70,7 +71,9 @@ useEffect(() => {
             <Icons.CalendarPlus className="w-10 h-10 mb-4" />
             <h3 className="text-lg font-semibold mb-2">¿Deseas agendar una cita?</h3>
             <Button className="bg-white text-sky-600 hover:bg-gray-100 w-full mt-2 rounded-full font-semibold">
+            <Link  href={`/appointments/create?patientId=${id}`}>
               Crear nueva cita
+            </Link>
             </Button>
           </div>
         </div>

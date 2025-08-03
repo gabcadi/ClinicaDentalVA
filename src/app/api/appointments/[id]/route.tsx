@@ -23,19 +23,19 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 	}
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
     await connectDB();
     const { id } = params;
-    const { description, date, time, confirmed } = await request.json();
+    const { description, date, time, confirmed, materials, doctorReport, totalPrice } = await request.json();
 
-    if (!id || !description || !date || !time) {
+    if (!id || !description || !date || !time || confirmed === undefined || !materials || !doctorReport || !totalPrice) {
       return NextResponse.json({ message: 'Todos los campos son obligatorios' }, { status: 400 });
     }
 
     const updatedAppointment = await Appointment.findByIdAndUpdate(
       id,
-      { description, date, time, confirmed },
+      { description, date, time, confirmed, materials, doctorReport, totalPrice },
       { new: true }
     );
 

@@ -8,13 +8,13 @@ export async function POST(request: Request) {
   try {
     await connectDB();
 
-    const { description, date, time } = await request.json();
+    const { description, date, time, patientId } = await request.json();
 
-    if (!description || !date || !time) {
+    if (!description || !date || !time || !patientId) {
       return NextResponse.json({ message: 'Todos los campos son obligatorios' }, { status: 400 });
     }
 
-    const newAppointment = new Appointment({ description, date, time });
+    const newAppointment = new Appointment({ description, date, time, patientId });
     await newAppointment.save();
 
     const email = process.env.EMAIL_USER || '';

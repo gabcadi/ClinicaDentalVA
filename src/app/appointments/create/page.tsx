@@ -20,9 +20,7 @@ const CreateAppointmentForm = ({ onSuccess }) => {
   });
 
   const handleSubmit = () => {
-    // Aquí irá tu lógica de creación
-    console.log("Creando cita:", formData);
-    onSuccess();
+    
   };
 
   return (

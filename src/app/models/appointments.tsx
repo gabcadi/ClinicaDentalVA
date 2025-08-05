@@ -9,6 +9,7 @@ interface IAppointment extends Document {
   materials?: string[];
   doctorReport?: string;
   totalPrice?: number;
+  prescriptionId?: string[] | null;
 }
 
 const appointmentSchema = new Schema<IAppointment>({
@@ -19,7 +20,8 @@ const appointmentSchema = new Schema<IAppointment>({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient' },
   materials: { type: [String], default: [] },
   doctorReport: { type: String, default: '' },
-  totalPrice: { type: Number, default: 0 }
+  totalPrice: { type: Number, default: 0 },
+prescriptionId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' }],
 });
 
 const Appointment: Model<IAppointment> =

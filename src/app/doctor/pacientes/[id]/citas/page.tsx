@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { 
   Calendar, 
   Clock, 
-  FileText, 
   User, 
   ArrowLeft,
   Eye,
@@ -21,9 +20,14 @@ import { TableSkeleton, InlineTextSkeleton } from '@/components/ui/loading-skele
 import { toast } from 'sonner';
 
 // Type guard para verificar si userId es un objeto User
-const isUser = (userId: any): userId is UserType => {
-  return userId && typeof userId === 'object' && 'fullName' in userId;
+const isUser = (userId: unknown): userId is UserType => {
+  return (
+    typeof userId === 'object' &&
+    userId !== null &&
+    'fullName' in userId
+  );
 };
+
 
 interface Appointment {
   _id: string;

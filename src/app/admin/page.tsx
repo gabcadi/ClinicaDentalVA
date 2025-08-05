@@ -24,8 +24,19 @@ const features = [
     description: 'Historial de pacientes.',
     href: '/historial',
   },
-  
-  
+  // Nuevos módulos añadidos
+  {
+    icon: <FilePlus2 className="w-6 h-6 text-sky-600" />,
+    title: 'Gestión de Tratamientos',
+    description: 'Administra los tratamientos ofrecidos por la clínica.',
+    href: '/tratamientos',
+  },
+  {
+    icon: <ImageIcon className="w-6 h-6 text-sky-600" />,
+    title: 'Gestión de Imágenes',
+    description: 'Sube y gestiona imágenes médicas de los pacientes.',
+    href: '/imagenes',
+  },
 ];
 
 export default function Page() {
@@ -37,7 +48,7 @@ export default function Page() {
           <p className="text-slate-600 mt-2 text-lg">Clínica Dental Vargas Araya</p>
         </header>
 
-        {/* Card Principal usuarios  */}
+        {/* Card Principal usuarios */}
         <div className="mb-16">
           <Card className="bg-white border border-sky-200 shadow-lg">
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -87,4 +98,3 @@ export default function Page() {
     </div>
   );
 }
-

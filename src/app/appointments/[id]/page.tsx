@@ -47,9 +47,14 @@ interface Prescription {
 }
 
 // Type guard para verificar si userId es un objeto User
-const isUser = (userId: any): userId is UserType => {
-  return userId && typeof userId === "object" && "fullName" in userId;
+const isUser = (userId: unknown): userId is UserType => {
+  return (
+    typeof userId === 'object' &&
+    userId !== null &&
+    'fullName' in userId
+  );
 };
+
 
 export default function AppointmentDetail() {
   const params = useParams();
@@ -172,22 +177,7 @@ export default function AppointmentDetail() {
     { id: 4, name: "Guantes de látex", quantity: 2, type: "Protección" },
   ];
 
-  const mockPrescriptions = [
-    {
-      id: 1,
-      medication: "Amoxicilina 500mg",
-      dosage: "1 cápsula cada 8 horas",
-      duration: "7 días",
-      instructions: "Tomar con alimentos para evitar molestias gástricas",
-    },
-    {
-      id: 2,
-      medication: "Ibuprofeno 400mg",
-      dosage: "1 tableta cada 6 horas",
-      duration: "3 días",
-      instructions: "Solo si hay dolor o inflamación",
-    },
-  ];
+  
 
   const { id } = useParams();
 
@@ -290,7 +280,6 @@ export default function AppointmentDetail() {
   // 4. The loading state is only managed by the second effect (production version)
 
   // [New comment] To prevent race conditions, consider adding:
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   // And modify the effects to skip duplicate fetches
 
   const formatDate = (dateString: string) => {

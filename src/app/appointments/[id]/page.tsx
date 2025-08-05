@@ -6,9 +6,7 @@ import Link from "next/link";
 import {
   Calendar,
   Clock,
-  FileText,
   User,
-  Stethoscope,
   Pill,
   Package,
   MapPin,
@@ -106,18 +104,24 @@ export default function AppointmentDetail() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ totalPrice: amount }),
+        body: JSON.stringify({ totalPrice: Number(amount) }),
       });
 
       if (!response.ok) {
-        throw new Error("No se pudo guardar el precio total");
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status} - ${errorText}`);
       }
 
       const updatedAppointment = await response.json();
       setAppointment(updatedAppointment); // Actualiza el estado local
     } catch (error) {
-      console.error(error);
-      alert("Error al guardar el precio total.");
+      console.error("Error al guardar el precio total:", error);
+
+      if (error instanceof Error) {
+        alert("Error al guardar el precio total: " + error.message);
+      } else {
+        alert("Error desconocido al guardar el precio total.");
+      }
     } finally {
       setIsSaving(false);
     }

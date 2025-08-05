@@ -1,21 +1,14 @@
 "use client";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
-  Calendar,
-  Clock,
-  FileText,
   Star,
   Sparkles,
   ArrowRight,
   Shield,
   Award,
-  Users,
-  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -37,7 +30,6 @@ const HomePage = () => {
 
   const [patient, setPatient] = useState<Patient | null>(null);
 
-  const [user, setUser] = useState<UserType | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -50,21 +42,23 @@ const HomePage = () => {
   
 
   useEffect(() => {
-  const fetchUser = async () => {
-    if (patient?.userId) {
-      try {
-        const userData = await getUserById(patient.userId);
-        setUser(userData);
-      } catch (error) {
-        console.error("Error al cargar el usuario:", error);
-        toast.error("Error al cargar la información del usuario");
+    const fetchPatient = async () => {
+      if (!patientId) {
+        toast.error("No se proporcionó un ID de paciente válido");
+        return;
       }
-    }
-  };
 
-  fetchUser();
-}, [patient]);
+      try {
+        const data = await getPatientById(patientId);
+        setPatient(data);
+      } catch (error) {
+        console.error("Error fetching patient:", error);
+        toast.error("Error al cargar la información del paciente");
+      }
+    };
 
+    fetchPatient();
+  }, [patientId]);
 
   const services = [
     {

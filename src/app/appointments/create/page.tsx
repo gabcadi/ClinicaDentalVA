@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Calendar, Clock, FileText, User, ClipboardCheck, Router } from 'lucide-react';
+import { Calendar, Clock, FileText, User, ClipboardCheck} from 'lucide-react';
 import { toast } from 'sonner';
 import { getPatientById } from '@/lib/api/patients';
 import { Patient, User as UserType } from '@/lib/types/interfaces';
@@ -10,9 +10,15 @@ import { useRouter } from 'next/navigation';
  
 
 // Type guard para verificar si userId es un objeto User
-const isUser = (userId: any): userId is UserType => {
-  return userId && typeof userId === 'object' && 'fullName' in userId;
+const isUser = (userId: unknown): userId is UserType => {
+  return (
+    typeof userId === 'object' &&
+    userId !== null &&
+    'fullName' in userId
+  );
 };
+
+
 
 export default function CreateAppointments() {
 	const searchParams = useSearchParams();

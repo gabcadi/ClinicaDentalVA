@@ -3,17 +3,14 @@ import connectDB from '../../utils/mongodb';
 import Patient from '../../models/patients';
 import mongoose from 'mongoose';
 
-export async function GET() {  // Eliminado el parámetro req no utilizado
+export async function GET() {
   try {
     await connectDB();
     const patients = await Patient.find({});
     return NextResponse.json(patients);
   } catch (error) {
     console.error('Error al obtener los pacientes:', error);
-    return NextResponse.json(
-      { message: 'Error al obtener los pacientes' },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'Error al obtener los pacientes' }, { status: 500 });
   }
 }
 
@@ -22,36 +19,21 @@ export async function POST(req: Request) {
     await connectDB();
     const { userId, age, id, phone, address } = await req.json();
 
-    const missingFields = [];
-    if (!userId) missingFields.push('userId');
-    if (!age) missingFields.push('age');
-    if (!id) missingFields.push('id');
-    if (!phone) missingFields.push('phone');
-    if (!address) missingFields.push('address');
-
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { 
-          message: 'Campos obligatorios faltantes',
-          missingFields 
-        },
-        { status: 400 }
-      );
+    // Validar datos
+    if (!userId || !age || !id || !phone || !address) {
+      return NextResponse.json({ message: 'Todos los campos son obligatorios' }, { status: 400 });
     }
 
-    // Validación de cédula existente
+    // Verificar si ya existe un paciente con esa cédula
     const existingPatient = await Patient.findOne({ id });
     if (existingPatient) {
-      return NextResponse.json(
-        { message: 'Ya existe un paciente con esa cédula' },
-        { status: 409 }  // Cambiado a 409 Conflict (más semántico)
-      );
+      return NextResponse.json({ message: 'Ya existe un paciente con esa cédula' }, { status: 400 });
     }
 
-    // Creación del paciente
+    // Crear nuevo paciente
     const newPatient = new Patient({
       userId: new mongoose.Types.ObjectId(userId),
-      age: Number(age),  // Conversión explícita a número
+      age,
       id,
       phone,
       address
@@ -59,18 +41,12 @@ export async function POST(req: Request) {
 
     await newPatient.save();
     
-    return NextResponse.json(
-      { 
-        message: 'Paciente creado exitosamente',
-        patient: newPatient 
-      },
-      { status: 201 }
-    );
+    return NextResponse.json({ 
+      message: 'Paciente creado exitosamente',
+      patient: newPatient 
+    }, { status: 201 });
   } catch (error) {
     console.error('Error al crear el paciente:', error);
-    return NextResponse.json(
-      { message: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'Error al crear el paciente' }, { status: 500 });
   }
 }

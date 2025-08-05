@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, ClipboardList, Search, Users } from 'lucide-react';
+import { FileText, ClipboardList, Search, Users, FilePlus2, ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [

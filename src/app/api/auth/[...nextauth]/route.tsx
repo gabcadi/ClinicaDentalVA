@@ -1,12 +1,12 @@
-import NextAuth from 'next-auth';
+import NextAuth from 'next-auth/next';
 import User from '../../../models/users';
 import connectDB from '../../../utils/mongodb';
 import bcrypt from 'bcryptjs';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-const handler = NextAuth({
+const authOptions = {
 	session: {
-		strategy: 'jwt',
+		strategy: 'jwt' as const,
 	},
 	providers: [
 		CredentialsProvider({
@@ -35,7 +35,12 @@ const handler = NextAuth({
 						throw new Error('Invalid password');
 					}
 
-					return { id: user._id, email: user.email, name: user.fullName, role: user.role };
+					return { 
+						id: String(user._id), 
+						email: user.email, 
+						name: user.fullName, 
+						role: user.role 
+					};
 				} catch (error) {
 					console.error('Error in authorize:', error);
 					throw new Error('Authorization failed');
@@ -44,7 +49,8 @@ const handler = NextAuth({
 		}),
 	],
 	callbacks: {
-		async jwt({ token, user }) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		async jwt({ token, user }: { token: any; user?: any }) {
 			if (user) {
 				token.id = user.id;
 				token.email = user.email;
@@ -53,7 +59,8 @@ const handler = NextAuth({
 			}
 			return token;
 		},
-		async session({ session, token }) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		async session({ session, token }: { session: any; token: any }) {
 			if (token) {
 				session.user = {
 					email: token.email,
@@ -68,6 +75,8 @@ const handler = NextAuth({
 		signIn: '/auth/signin',
 	},
 	secret: process.env.NEXTAUTH_SECRET,
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

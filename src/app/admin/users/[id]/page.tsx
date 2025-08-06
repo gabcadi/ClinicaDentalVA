@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import * as Icons from 'lucide-react';
 import { getUserById } from '@/lib/api/users';
 import { User } from '@/lib/types/interfaces';
+import React from 'react';
 
 export default function UserDetalle() {
   const { _id } = useParams() as { _id: string };
@@ -43,7 +44,7 @@ export default function UserDetalle() {
               <li><span className="font-medium">Nombre: </span>{user?.fullName}</li>
               <li><span className="font-medium">Email: </span>{user?.email}</li>
               <li><span className="font-medium">Rol:</span> {user?.role}</li>
-              <li><span className="font-medium">ID:</span> {user?._id}</li>
+              <li><span className="font-medium">ID:</span> {user?._id?.toString()}</li>
             </ul>
           </div>
 
@@ -66,7 +67,7 @@ export default function UserDetalle() {
   );
 }
 
-function CardItem({ icon, title, description }: { icon: JSX.Element; title: string; description: string }) {
+function CardItem({ icon, title, description }: { icon: React.ReactElement; title: string; description: string }) {
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
       <div className="flex items-center gap-3 mb-3 text-sky-600">

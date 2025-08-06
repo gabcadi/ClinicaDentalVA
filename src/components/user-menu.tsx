@@ -57,7 +57,8 @@ const UserButton = () => {
 						<DropdownMenuItem className="h-10 text-sky-700 font-semibold cursor-pointer" onClick={() => router.push('/')}>
 							Inicio
 						</DropdownMenuItem>
-						{session.user?.role === 'admin' && (
+						{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+						{(session.user as any)?.role === 'admin' && (
 							<>
 								<DropdownMenuItem
 									className="h-10 text-sky-700 font-semibold cursor-pointer"
@@ -74,7 +75,8 @@ const UserButton = () => {
 								
 							</>
 						)}
-						{session.user?.role === 'doctor' && (
+						{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+						{(session.user as any)?.role === 'doctor' && (
 							<>
 								<DropdownMenuItem
 									className="h-10 text-sky-700 font-semibold cursor-pointer"

@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   Star,
@@ -10,25 +9,14 @@ import {
   Shield,
   Award,
 } from "lucide-react";
-import { toast } from "sonner";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getPatientById } from "@/lib/api/patients";
-import { Patient, User as UserType } from "@/lib/types/interfaces";
-
-const isUser = (userId: any): userId is UserType => {
-  return userId && typeof userId === "object" && "fullName" in userId;
-};
 
 const HomePage = () => {
-    const params = useParams();
-  
   const [mounted, setMounted] = useState(false);
   const [currentService, setCurrentService] = useState(0);
   const searchParams = useSearchParams();
   const patientId = searchParams.get("patientId");
-
-  const [patient, setPatient] = useState<Patient | null>(null);
 
 
   useEffect(() => {
@@ -38,27 +26,6 @@ const HomePage = () => {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
-
-  
-
-  useEffect(() => {
-    const fetchPatient = async () => {
-      if (!patientId) {
-        toast.error("No se proporcionó un ID de paciente válido");
-        return;
-      }
-
-      try {
-        const data = await getPatientById(patientId);
-        setPatient(data);
-      } catch (error) {
-        console.error("Error fetching patient:", error);
-        toast.error("Error al cargar la información del paciente");
-      }
-    };
-
-    fetchPatient();
-  }, [patientId]);
 
   const services = [
     {

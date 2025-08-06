@@ -13,8 +13,14 @@ interface Appointment {
   time: string; // formato HH:mm
 }
 
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+}
+
 export default function AppointmentsFullCalendar() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
     fetch('/api/appointments')

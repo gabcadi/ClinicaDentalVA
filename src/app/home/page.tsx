@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   Star,
   Sparkles,
@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-const HomePage = () => {
+const HomePageContent = () => {
   const [mounted, setMounted] = useState(false);
   const [currentService, setCurrentService] = useState(0);
   const searchParams = useSearchParams();
@@ -226,6 +226,27 @@ const HomePage = () => {
         }
       `}</style>
     </div>
+  );
+};
+
+// Loading component for Suspense fallback
+function LoadingHomePage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Cargando...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+const HomePage = () => {
+  return (
+    <Suspense fallback={<LoadingHomePage />}>
+      <HomePageContent />
+    </Suspense>
   );
 };
 

@@ -1,18 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
-import {
-  Star,
-  Sparkles,
-  ArrowRight,
-  Shield,
-  Award,
-} from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect, Suspense } from "react";
+import { Star, Sparkles, ArrowRight, Shield, Award } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
 import { getPatientById } from "@/lib/api/patients";
 import { Patient, User as UserType } from "@/lib/types/interfaces";
 import { useSession } from "next-auth/react";
@@ -21,13 +13,14 @@ const isUser = (userId: any): userId is UserType => {
   return userId && typeof userId === "object" && "fullName" in userId;
 };
 
-const HomePage = () => {
+const HomePageContent = () => {
   const params = useParams();
   const { data: session, status } = useSession();
   
   const [mounted, setMounted] = useState(false);
   const [currentService, setCurrentService] = useState(0);
   const searchParams = useSearchParams();
+  
   // Check for patientId in URL first, then fallback to session
   const patientIdFromURL = searchParams.get("patientId");
   const [patientId, setPatientId] = useState<string | null>(patientIdFromURL);
@@ -49,7 +42,6 @@ const HomePage = () => {
         // If there's an authenticated user with 'user' role, try to fetch their patient profile
         try {
           setLoading(true);
-          // You would need to implement this API endpoint
           // Access email instead of id
           const response = await fetch(`/api/patients/by-user?email=${encodeURIComponent(session.user.email || '')}`);
           if (response.ok) {
@@ -73,10 +65,7 @@ const HomePage = () => {
 
   useEffect(() => {
     const fetchPatient = async () => {
-      if (!patientId) {
-        // Instead of showing an error, just don't fetch anything
-        return;
-      }
+      if (!patientId) return;
 
       try {
         setLoading(true);
@@ -84,7 +73,7 @@ const HomePage = () => {
         setPatient(data);
       } catch (error) {
         console.error("Error fetching patient:", error);
-        toast.error("Error al cargar la información del paciente");
+        // toast.error("Error al cargar la información del paciente");
       } finally {
         setLoading(false);
       }
@@ -172,8 +161,6 @@ const HomePage = () => {
                 Tecnología de vanguardia, atención personalizada y resultados
                 extraordinarios en el corazón de Costa Rica
               </p>
-
-
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 {loading ? (
@@ -312,6 +299,27 @@ const HomePage = () => {
         }
       `}</style>
     </div>
+  );
+};
+
+// Loading component for Suspense fallback
+function LoadingHomePage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Cargando...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+const HomePage = () => {
+  return (
+    <Suspense fallback={<LoadingHomePage />}>
+      <HomePageContent />
+    </Suspense>
   );
 };
 

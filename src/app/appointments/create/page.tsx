@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Calendar, Clock, FileText, User, ClipboardCheck} from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,9 +18,7 @@ const isUser = (userId: unknown): userId is UserType => {
   );
 };
 
-
-
-export default function CreateAppointments() {
+function CreateAppointmentsContent() {
 	const searchParams = useSearchParams();
   const router = useRouter();
 	const patientId = searchParams.get('patientId');
@@ -218,5 +216,29 @@ export default function CreateAppointments() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+// Loading component for Suspense fallback
+function LoadingAppointmentForm() {
+	return (
+		<div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+			<div className="bg-white p-8 rounded-lg shadow-md">
+				<div className="animate-pulse">
+					<div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
+					<div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+					<div className="h-4 bg-gray-200 rounded w-24"></div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+// Main component with Suspense boundary
+export default function CreateAppointments() {
+	return (
+		<Suspense fallback={<LoadingAppointmentForm />}>
+			<CreateAppointmentsContent />
+		</Suspense>
 	);
 }

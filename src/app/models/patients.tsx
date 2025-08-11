@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, ObjectId, Schema } from 'mongoose';
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
 interface Patient extends Document {
 	age: number;

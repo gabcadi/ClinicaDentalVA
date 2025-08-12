@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import {
   Star,

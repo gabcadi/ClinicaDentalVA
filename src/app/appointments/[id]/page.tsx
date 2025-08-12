@@ -167,7 +167,7 @@ export default function AppointmentDetail() {
       setShowPrescriptionModal(false);
     } catch (error) {
       console.error("Error saving prescription:", error);
-      alert(`Error al guardar la receta: ${error.message}`);
+      alert(`Error al guardar la receta: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
   const mockMaterials = [

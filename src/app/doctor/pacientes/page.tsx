@@ -11,8 +11,8 @@ import { toast } from 'sonner';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
 
 // Type guard para verificar si userId es un objeto User
-const isUser = (userId: any): userId is User => {
-  return userId && typeof userId === 'object' && 'fullName' in userId;
+const isUser = (userId: unknown): userId is User => {
+  return userId !== null && typeof userId === 'object' && 'fullName' in (userId as Record<string, unknown>);
 };
 
 export default function PacientesPage() {

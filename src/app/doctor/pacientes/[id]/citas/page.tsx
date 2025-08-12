@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { 
   Calendar, 
   Clock, 
-  User, 
   ArrowLeft,
   Eye,
   CheckCircle,

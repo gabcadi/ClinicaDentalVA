@@ -100,7 +100,7 @@ export default function NuevoPacientePage() {
 
       toast.success('Paciente creado exitosamente');
       router.push('/doctor/pacientes');
-    } catch (error) {
+    } catch {
       toast.error('Error al crear el paciente. Ya existe un usuario asignado como paciente.');
     } finally {
       setLoading(false);

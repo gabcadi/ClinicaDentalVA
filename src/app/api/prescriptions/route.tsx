@@ -35,15 +35,15 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Full error details:', {
-      errorName: error.name,
-      errorMessage: error.message,
-      errorStack: error.stack,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
     });
     
     return NextResponse.json(
       { 
         message: 'Error interno al crear receta',
-        errorDetails: error.message 
+        errorDetails: error instanceof Error ? error.message : String(error)
       },
       { status: 500 }
     );

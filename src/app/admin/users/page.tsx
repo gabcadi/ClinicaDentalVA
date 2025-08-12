@@ -32,7 +32,7 @@ export default function UsersPage() {
   const filteredUsers = users.filter((user) =>
     user.fullName?.toLowerCase().includes(busqueda.toLowerCase()) ||
     user.email?.toLowerCase().includes(busqueda.toLowerCase()) ||
-    user._id?.toLowerCase().includes(busqueda.toLowerCase())
+    user._id?.toString().toLowerCase().includes(busqueda.toLowerCase())
   );
 
   const updateUserRole = async (userId: string, newRole: 'admin' | 'doctor' | 'user') => {

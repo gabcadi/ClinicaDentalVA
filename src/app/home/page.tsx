@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import {
   Star,
@@ -9,15 +10,47 @@ import {
   Shield,
   Award,
 } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
+import { getPatientById } from "@/lib/api/patients";
+import { Patient, User as UserType } from "@/lib/types/interfaces";
+import { useSession } from "next-auth/react";
+
+const isUser = (userId: any): userId is UserType => {
+  return userId && typeof userId === "object" && "fullName" in userId;
+};
 
 const HomePageContent = () => {
+  const params = useParams();
+  const { data: session, status } = useSession();
+  
   const [mounted, setMounted] = useState(false);
   const [currentService, setCurrentService] = useState(0);
-  const searchParams = useSearchParams();
-  const patientId = searchParams.get("patientId");
+  
+  // Wrap searchParams in a client component
+  const SearchParamsWrapper = () => {
+    const searchParams = useSearchParams();
+    return <SearchParamsConsumer searchParams={searchParams} />;
+  };
 
+  // Create a separate component that consumes the searchParams
+  const SearchParamsConsumer = ({ searchParams }: { searchParams: ReturnType<typeof useSearchParams> }) => {
+    const patientIdFromURL = searchParams.get("patientId");
+    
+    // Update parent component state
+    useEffect(() => {
+      setPatientId(patientIdFromURL);
+    }, [patientIdFromURL]);
+    
+    return null;
+  };
+  
+  // Initialize patientId with null - will be set by the SearchParamsConsumer
+  const [patientIdFromURL, setPatientIdFromURL] = useState<string | null>(null);
+  const [patientId, setPatientId] = useState<string | null>(patientIdFromURL);
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -26,6 +59,55 @@ const HomePageContent = () => {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // This effect checks if the user is authenticated and has a role of 'user'
+  useEffect(() => {
+    const checkUserPatient = async () => {
+      if (status === 'authenticated' && session?.user?.role === 'user' && !patientId) {
+        // If there's an authenticated user with 'user' role, try to fetch their patient profile
+        try {
+          setLoading(true);
+          // Access email instead of id
+          const response = await fetch(`/api/patients/by-user?email=${encodeURIComponent(session.user.email || '')}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data._id) {
+              setPatientId(data._id);
+            }
+          }
+        } catch (error) {
+          console.error("Error finding patient for user:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    if (!patientIdFromURL) {
+      checkUserPatient();
+    }
+  }, [session, status, patientIdFromURL]);
+
+  useEffect(() => {
+    const fetchPatient = async () => {
+      if (!patientId) return;
+
+      try {
+        setLoading(true);
+        const data = await getPatientById(patientId);
+        setPatient(data);
+      } catch (error) {
+        console.error("Error fetching patient:", error);
+        // toast.error("Error al cargar la información del paciente");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (patientId) {
+      fetchPatient();
+    }
+  }, [patientId]);
 
   const services = [
     {
@@ -69,6 +151,11 @@ const HomePageContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-750/40 to-slate-300 relative overflow-hidden">
+      {/* Wrap useSearchParams in Suspense */}
+      <Suspense fallback={null}>
+        <SearchParamsWrapper />
+      </Suspense>
+      
       {/* Partículas animadas */}
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 100 }).map((_, i) => (
@@ -105,13 +192,29 @@ const HomePageContent = () => {
                 extraordinarios en el corazón de Costa Rica
               </p>
 
-
-
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {patientId && (
-                  <Link href={`/appointments/create/${patientId}`}>
+                {loading ? (
+                  <Button disabled className="h-14 px-8 bg-gradient-to-r from-cyan-500/50 to-blue-600/50 text-white font-semibold rounded-full">
+                    <span>Cargando...</span>
+                  </Button>
+                ) : patientId ? (
+                  <Link href={`/appointments/create?patientId=${patientId}`}>
                     <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
                       <span>Agenda tu cita</span>
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                ) : status === 'authenticated' ? (
+                  <Link href="/sign-up">
+                    <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
+                      <span>Completa tu perfil</span>
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link href="/sign-in">
+                    <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
+                      <span>Inicia sesión</span>
                       <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>

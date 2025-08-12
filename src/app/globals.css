@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 
 html, body, :root {
-  @apply h-full w-full;
+  @apply h-full w-full m-0 p-0 overflow-x-hidden;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -123,4 +123,15 @@ html, body, :root {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* CSS Reset to remove white gaps */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }

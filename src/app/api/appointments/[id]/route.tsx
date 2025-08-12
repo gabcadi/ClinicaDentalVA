@@ -9,7 +9,7 @@ export async function GET(
   try {
     await connectDB();
 
-    const { id } = await params;
+    const { id } = params;
 
     if (!id) {
       return NextResponse.json(
@@ -43,7 +43,7 @@ export async function DELETE(
 ) {
   try {
     await connectDB();
-    const { id } = await params;
+    const { id } = params;
 
     if (!id) {
       return NextResponse.json(

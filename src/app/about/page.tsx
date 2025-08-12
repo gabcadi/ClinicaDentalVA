@@ -15,9 +15,8 @@ import {
   CheckCircle,
   MapPin
 } from "lucide-react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Animated dental particles background (same as homepage)
 const DentalParticle = ({ delay = 0 }) => (
@@ -368,7 +367,7 @@ export default function AboutPage() {
                   <Quote className="w-10 h-10 text-cyan-400/30" />
                 </CardHeader>
                 <CardContent className="pt-2">
-                  <p className="text-slate-300/80 italic mb-6">"{testimonial.text}"</p>
+                  <p className="text-slate-300/80 italic mb-6">&ldquo;{testimonial.text}&rdquo;</p>
                   <div className="flex justify-between items-end">
                     <div>
                       <h4 className="text-white font-medium">{testimonial.name}</h4>

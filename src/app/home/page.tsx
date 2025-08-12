@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   Star,
   Sparkles,
@@ -27,9 +27,27 @@ const HomePage = () => {
   
   const [mounted, setMounted] = useState(false);
   const [currentService, setCurrentService] = useState(0);
-  const searchParams = useSearchParams();
-  // Check for patientId in URL first, then fallback to session
-  const patientIdFromURL = searchParams.get("patientId");
+  
+  // Wrap searchParams in a client component
+  const SearchParamsWrapper = () => {
+    const searchParams = useSearchParams();
+    return <SearchParamsConsumer searchParams={searchParams} />;
+  };
+
+  // Create a separate component that consumes the searchParams
+  const SearchParamsConsumer = ({ searchParams }: { searchParams: ReturnType<typeof useSearchParams> }) => {
+    const patientIdFromURL = searchParams.get("patientId");
+    
+    // Update parent component state
+    useEffect(() => {
+      setPatientId(patientIdFromURL);
+    }, [patientIdFromURL]);
+    
+    return null;
+  };
+  
+  // Initialize patientId with null - will be set by the SearchParamsConsumer
+  const [patientIdFromURL, setPatientIdFromURL] = useState<string | null>(null);
   const [patientId, setPatientId] = useState<string | null>(patientIdFromURL);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(false);
@@ -137,6 +155,11 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-750/40 to-slate-300 relative overflow-hidden">
+      {/* Wrap useSearchParams in Suspense */}
+      <Suspense fallback={null}>
+        <SearchParamsWrapper />
+      </Suspense>
+      
       {/* Partículas animadas */}
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 100 }).map((_, i) => (

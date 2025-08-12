@@ -2,99 +2,90 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, ClipboardList, Search, Users, FilePlus2, ImageIcon } from 'lucide-react';
+import { Users, Search, Shield } from 'lucide-react';
 import Link from 'next/link';
 
-const features = [
+// Configuración de módulos del panel
+const modules = [
   {
-    icon: <FileText className="w-6 h-6 text-sky-600" />,
-    title: 'Códigos CABYS',
-    description: 'Visualiza, consulta y actualiza los códigos CABYS.',
-    href: '/CABYS',
+    key: 'users',
+    icon: Users,
+    title: 'Gestión de Usuarios',
+    description: 'Administración de cuentas, roles y permisos del sistema.',
+    href: '/admin/users'
   },
   {
-    icon: <ClipboardList className="w-6 h-6 text-sky-600" />,
-    title: 'Detalles de consultas',
-    description: 'Registra y consulta la evolución del paciente.',
-    href: '/consultas',
-  },
-  {
-    icon: <Search className="w-6 h-6 text-sky-600" />,
-    title: 'Historial de pacientes',
-    description: 'Historial de pacientes.',
-    href: '/historial',
-  },
-  // Nuevos módulos añadidos
-  {
-    icon: <FilePlus2 className="w-6 h-6 text-sky-600" />,
-    title: 'Gestión de Tratamientos',
-    description: 'Administra los tratamientos ofrecidos por la clínica.',
-    href: '/tratamientos',
-  },
-  {
-    icon: <ImageIcon className="w-6 h-6 text-sky-600" />,
-    title: 'Gestión de Imágenes',
-    description: 'Sube y gestiona imágenes médicas de los pacientes.',
-    href: '/imagenes',
-  },
+    key: 'historial',
+    icon: Search,
+    title: 'Historial de Citas',
+    description: 'Consulta y administración del historial completo de citas.',
+    href: '/admin/historial'
+  }
 ];
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-100 px-6 py-12">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-16 text-center">
-          <h1 className="text-4xl font-bold text-sky-700">¡Hola Admin! - Panel Administrador</h1>
-          <p className="text-slate-600 mt-2 text-lg">Clínica Dental Vargas Araya</p>
-        </header>
+    <main className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-50">
+      <div className="px-6 py-16">
+        <div className="max-w-5xl mx-auto">
+          {/* Header Section */}
+          <header className="mb-16 text-center">
+            <div className="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-full px-4 py-2 mb-6">
+              <Shield className="w-4 h-4 text-slate-600" />
+              <span className="text-slate-700 font-medium text-sm">
+                Administración
+              </span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
+              Panel de Administración
+            </h1>
+            <p className="text-slate-600 text-lg max-w-2xl mx-auto leading-relaxed">
+              Clínica Dental Vargas Araya
+            </p>
+          </header>
 
-        {/* Card Principal usuarios */}
-        <div className="mb-16">
-          <Card className="bg-white border border-sky-200 shadow-lg">
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-sky-100 flex items-center justify-center">
-                  <Users className="w-7 h-7 text-sky-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl text-sky-700">Gestión de Usuarios</CardTitle>
-                  <p className="text-slate-600 mt-1 max-w-xl">
-                    Administración de usuarios, roles y permisos para un control total del sistema.
-                  </p>
-                </div>
-              </div>
-              <Link href="/admin/users">
-                <Button className="bg-sky-600 hover:bg-sky-700 cursor-pointer text-white rounded-md px-6 h-12">
-                  Módulo de Usuarios
-                </Button>
-              </Link>
-            </CardHeader>
-          </Card>
-        </div>
-        
-
-        {/* Otros módulos */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center">
-                  {feature.icon}
-                </div>
-                <CardTitle className="text-sky-700 text-lg">{feature.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600 text-sm mb-4">{feature.description}</p>
-                <Link href={feature.href}>
-                  <Button variant="outline" className="text-sky-600 border-sky-400 hover:bg-sky-50">
-                    Ir al módulo
-                  </Button>
+          {/* Modules Grid */}
+          <section aria-label="Módulos administrativos" className="grid gap-8 sm:grid-cols-2 max-w-4xl mx-auto">
+            {modules.map((module) => {
+              const Icon = module.icon;
+              return (
+                <Link 
+                  key={module.key} 
+                  href={module.href} 
+                  className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-4 rounded-2xl"
+                >
+                  <Card className="border-slate-200 bg-white hover:border-slate-300 transition-all duration-300 hover:shadow-lg rounded-2xl h-full">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="h-12 w-12 rounded-xl bg-slate-900 flex items-center justify-center group-hover:bg-slate-800 transition-colors">
+                          <Icon className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <CardTitle className="text-xl font-semibold text-slate-900 mb-2 group-hover:text-slate-800 transition-colors">
+                            {module.title}
+                          </CardTitle>
+                          <p className="text-slate-600 text-sm leading-relaxed">
+                            {module.description}
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0 pb-6">
+                      <Button 
+                        className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                      >
+                        Acceder
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </Link>
-              </CardContent>
-            </Card>
-          ))}
+              );
+            })}
+          </section>
+
+        
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -18,11 +18,15 @@ import {
   Download,
   Share2,
   Edit3,
+  X,
 } from "lucide-react";
 import { getPatientById } from "@/lib/api/patients";
 import { getUserById } from "@/lib/api/users";
 import { Patient, User as UserType } from "@/lib/types/interfaces";
 import AddPrescriptionModal from "@/components/ui/add-prescription-modal";
+import AddMaterialModal from "@/components/ui/add-material-modal";
+import ConfirmDeleteModal from "@/components/ui/confirm-delete-modal";
+import { IMaterial } from "@/app/models/appointments";
 
 interface Appointment {
   _id: string;
@@ -33,7 +37,7 @@ interface Appointment {
   patientId: string;
   createdAt: string;
   updatedAt: string;
-  materials?: string[];
+  materials?: IMaterial[];
   doctorReport?: string;
   totalPrice?: number;
   prescriptionId?: string[] | null;
@@ -65,12 +69,39 @@ export default function AppointmentDetail() {
   const [user, setUser] = useState<UserType | null>(null);
 
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [materials, setMaterials] = useState<IMaterial[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [report, setReport] = useState("");
   const [amount, setAmount] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [showMaterialModal, setShowMaterialModal] = useState(false);
+  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
+  
+  // Estados para el modal de confirmación de eliminación
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeletingMaterial, setIsDeletingMaterial] = useState(false);
+
+  // Funciones para manejar modales de forma exclusiva
+  const openPrescriptionModal = () => {
+    setShowMaterialModal(false);
+    setShowPrescriptionModal(true);
+  };
+
+  const openMaterialModal = () => {
+    setShowPrescriptionModal(false);
+    setShowMaterialModal(true);
+  };
+
+  const closePrescriptionModal = () => {
+    setShowPrescriptionModal(false);
+  };
+
+  const closeMaterialModal = () => {
+    setShowMaterialModal(false);
+  };
 
   const handleSaveReport = async () => {
     if (!report.trim()) return;
@@ -164,18 +195,96 @@ export default function AppointmentDetail() {
       console.log("Saved prescription:", newPrescription); // Debug log
 
       setPrescriptions((prev) => [...prev, newPrescription]);
-      setShowPrescriptionModal(false);
+      closePrescriptionModal();
     } catch (error) {
       console.error("Error saving prescription:", error);
       alert(`Error al guardar la receta: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
-  const mockMaterials = [
-    { id: 1, name: "Jeringa desechable 5ml", quantity: 2, type: "Consumible" },
-    { id: 2, name: "Gasas estériles", quantity: 5, type: "Material médico" },
-    { id: 3, name: "Alcohol isopropílico", quantity: 1, type: "Antiséptico" },
-    { id: 4, name: "Guantes de látex", quantity: 2, type: "Protección" },
-  ];
+
+  const handleAddMaterial = async (materialData: { name: string; type: string; quantity: number }) => {
+    try {
+      setIsAddingMaterial(true);
+      const response = await fetch(`/api/appointments/${appointmentId}/materials`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(materialData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al agregar material');
+      }
+
+      const result = await response.json();
+      setMaterials(prev => [...prev, result.material]);
+      closeMaterialModal();
+    } catch (error) {
+      console.error('Error adding material:', error);
+      alert(`Error al agregar material: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsAddingMaterial(false);
+    }
+  };
+
+  const handleDeleteMaterial = async (materialId: string) => {
+    setIsDeletingMaterial(true);
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}/materials?materialId=${materialId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar material');
+      }
+
+      setMaterials(prev => prev.filter(material => material._id !== materialId));
+      setShowDeleteModal(false);
+      setMaterialToDelete(null);
+    } catch (error) {
+      console.error('Error deleting material:', error);
+      alert('Error al eliminar material');
+    } finally {
+      setIsDeletingMaterial(false);
+    }
+  };
+
+  // Función para abrir el modal de confirmación
+  const openDeleteModal = (materialId: string, materialName: string) => {
+    setMaterialToDelete({ id: materialId, name: materialName });
+    setShowDeleteModal(true);
+  };
+
+  // Función para cerrar el modal de confirmación
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setMaterialToDelete(null);
+  };
+
+  // Función para compartir (copiar URL)
+  const handleShare = async () => {
+    try {
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      
+      // Mostrar feedback visual (opcional - puedes agregar un toast/notification)
+      alert('¡Link copiado al portapapeles!');
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      
+      // Fallback para navegadores que no soportan clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      alert('¡Link copiado al portapapeles!');
+    }
+  };
 
   
 
@@ -239,6 +348,11 @@ export default function AppointmentDetail() {
         const appointmentData = await appointmentResponse.json();
         console.log("Appointment data received:", appointmentData);
         setAppointment(appointmentData);
+
+        // Set materials from appointment data
+        if (appointmentData.materials) {
+          setMaterials(appointmentData.materials);
+        }
 
         //  Obtener el paciente
         if (appointmentData.patientId) {
@@ -340,7 +454,7 @@ export default function AppointmentDetail() {
       {/* Header */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
-          <button className="flex items-center gap-3 text-cyan-400 hover:text-cyan-300 transition-colors group">
+          <button className="flex items-center gap-3 text-cyan-400 hover:text-cyan-300 transition-colors group cursor-pointer">
             <div className="w-10 h-10 bg-cyan-500/20 rounded-full flex items-center justify-center group-hover:bg-cyan-500/30 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </div>
@@ -350,15 +464,18 @@ export default function AppointmentDetail() {
           </button>
 
           <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all">
+            <button 
+              onClick={handleShare}
+              className="flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+            >
               <Share2 className="w-4 h-4" />
               Compartir
             </button>
-            <button className="flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all">
+            <button className="flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all cursor-pointer">
               <Download className="w-4 h-4" />
               Descargar
             </button>
-            <button className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all">
+            <button className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all cursor-pointer">
               <Edit3 className="w-4 h-4" />
               Editar
             </button>
@@ -617,7 +734,7 @@ export default function AppointmentDetail() {
                       <button
                         onClick={handleSaveReport}
                         disabled={isSaving || !report?.trim()}
-                        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-semibold py-2 px-6 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-semibold py-2 px-6 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                       >
                         {isSaving ? (
                           <>
@@ -670,8 +787,8 @@ export default function AppointmentDetail() {
 
               {/* Add Prescription Button */}
               <button
-                onClick={() => setShowPrescriptionModal(true)}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl shadow-lg transition-colors"
+                onClick={openPrescriptionModal}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl shadow-lg transition-colors cursor-pointer"
               >
                 <Pill className="w-4 h-4" />
                 Agregar Receta
@@ -737,62 +854,99 @@ export default function AppointmentDetail() {
             {/* Add Prescription Modal */}
             <AddPrescriptionModal
               isOpen={showPrescriptionModal}
-              onClose={() => setShowPrescriptionModal(false)}
+              onClose={closePrescriptionModal}
               onSubmit={handleAddPrescription}
             />
           </div>
 
           {/* Materiales Utilizados */}
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl hover:bg-white/15 transition-all duration-500 group">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Package className="w-8 h-8 text-white" />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Package className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    Materiales Utilizados
+                  </h2>
+                  <p className="text-purple-300">Inventario de la consulta</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-1">
-                  Materiales Utilizados
-                </h2>
-                <p className="text-purple-300">Inventario de la consulta</p>
-              </div>
+
+              {/* Add Material Button */}
+              <button
+                onClick={openMaterialModal}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-xl shadow-lg transition-colors cursor-pointer"
+              >
+                <Package className="w-4 h-4" />
+                Agregar Material
+              </button>
             </div>
 
             <div className="space-y-3">
-              {mockMaterials.map((material) => (
-                <div
-                  key={material.id}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                      <Package className="w-5 h-5 text-purple-400" />
+              {materials.length > 0 ? (
+                materials.map((material) => (
+                  <div
+                    key={material._id}
+                    className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <Package className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-medium">
+                          {material.name}
+                        </h4>
+                        <p className="text-gray-400 text-sm">{material.type}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-white font-medium">
-                        {material.name}
-                      </h4>
-                      <p className="text-gray-400 text-sm">{material.type}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-semibold">
+                        x{material.quantity}
+                      </span>
+                      <button
+                        onClick={() => material._id && material.name && openDeleteModal(material._id, material.name)}
+                        className="w-8 h-8 bg-red-500/20 hover:bg-red-500/40 rounded-lg flex items-center justify-center text-red-400 transition-colors cursor-pointer"
+                        title="Eliminar material"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-semibold">
-                      x{material.quantity}
-                    </span>
-                  </div>
+                ))
+              ) : (
+                <div className="bg-purple-500/10 rounded-xl p-5 border border-purple-500/30 text-center">
+                  <Package className="w-8 h-8 mx-auto text-purple-400 mb-3" />
+                  <p className="text-purple-300">
+                    No hay materiales registrados
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
 
-            <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/30">
-              <div className="flex items-center justify-between">
-                <span className="text-purple-300 font-medium">
-                  Total de elementos
-                </span>
-                <span className="text-white font-bold text-lg">
-                  {mockMaterials.reduce((sum, m) => sum + m.quantity, 0)}{" "}
-                  unidades
-                </span>
+            {materials.length > 0 && (
+              <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-purple-300 font-medium">
+                    Total de elementos
+                  </span>
+                  <span className="text-white font-bold text-lg">
+                    {materials.reduce((sum, m) => sum + m.quantity, 0)}{" "}
+                    unidades
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Add Material Modal */}
+            <AddMaterialModal
+              isOpen={showMaterialModal}
+              onClose={closeMaterialModal}
+              onSubmit={handleAddMaterial}
+              isLoading={isAddingMaterial}
+            />
           </div>
         </div>
 
@@ -836,7 +990,7 @@ export default function AppointmentDetail() {
             <button
               onClick={handleSaveAmount}
               disabled={isSaving || !amount.trim()}
-              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-semibold py-2 px-6 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-semibold py-2 px-6 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSaving ? "Guardando..." : "Guardar Monto"}
             </button>
@@ -860,6 +1014,15 @@ export default function AppointmentDetail() {
         <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-blue-400/40 rounded-full animate-ping delay-500"></div>
         <div className="absolute bottom-1/3 right-1/4 w-1 h-1 bg-pink-400/50 rounded-full animate-pulse delay-1000"></div>
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={closeDeleteModal}
+        onConfirm={() => materialToDelete && handleDeleteMaterial(materialToDelete.id)}
+        materialName={materialToDelete?.name || ''}
+        isDeleting={isDeletingMaterial}
+      />
     </div>
   );
 }

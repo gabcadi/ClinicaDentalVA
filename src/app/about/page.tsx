@@ -428,16 +428,17 @@ export default function AboutPage() {
             
             <div className="bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm rounded-xl overflow-hidden h-[400px]">
               <div className="w-full h-full relative">
-                {/* Aquí se puede integrar un mapa real con Google Maps, por ahora un placeholder */}
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-800/90 to-blue-900/90 flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-16 h-16 text-cyan-400 mx-auto mb-4 opacity-50" />
-                    <p className="text-white text-lg font-medium">Mapa de ubicación</p>
-                    <p className="text-slate-300/80 max-w-xs mx-auto mt-2">
-                      Aquí se mostrará el mapa de Google Maps con la ubicación exacta de la clínica.
-                    </p>
-                  </div>
-                </div>
+                {/* Google Maps iframe de la Clínica Vargas Araya Odontología */}
+                <iframe 
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d8915.701800280296!2d-84.04097752324382!3d9.933774591183202!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8fa0e3c5bd920a7d%3A0x593f0740d421f95e!2sClinica%20Vargas%20Araya%20Odontologia!5e0!3m2!1ses!2scr!4v1754967118900!5m2!1ses!2scr" 
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }} 
+                  allowFullScreen={true}
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="rounded-xl"
+                />
               </div>
             </div>
           </div>

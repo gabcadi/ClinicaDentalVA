@@ -7,8 +7,11 @@ import * as Icons from 'lucide-react';
 import { getPatientById } from '@/lib/api/patients';
 import { getUserById } from '@/lib/api/users';
 import { Patient, User } from '@/lib/types/interfaces';
+import { MedicalImage } from '@/app/models/patients';
 import Link from 'next/link';
 import { PatientPageSkeleton, InlineTextSkeleton } from '@/components/ui/loading-skeletons';
+import UploadImageModal from '@/components/ui/upload-image-modal';
+import { toast } from 'sonner';
 
 // Type guard para verificar si userId es un objeto User
 const isUser = (userId: unknown): userId is User => {
@@ -21,8 +24,11 @@ export default function PacienteDetalle() {
 
   const [paciente, setPaciente] = useState<Patient | null>(null);
   const [user, setUser] = useState<User | null>(null); 
+  const [images, setImages] = useState<MedicalImage[]>([]);
   const [loadingPatient, setLoadingPatient] = useState(true);
   const [loadingUser, setLoadingUser] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
 useEffect(() => {
   const fetchPaciente = async () => {
@@ -66,6 +72,57 @@ useEffect(() => {
 
   fetchUser();
 }, [paciente]);
+
+// Función para obtener imágenes médicas
+useEffect(() => {
+  const fetchImages = async () => {
+    if (!id) return;
+
+    try {
+      const response = await fetch(`/api/patients/${id}/images`);
+      if (response.ok) {
+        const data = await response.json();
+        setImages(data.images || []);
+      }
+    } catch (error) {
+      console.error('Error fetching images:', error);
+    }
+  };
+
+  fetchImages();
+}, [id]);
+
+// Función para subir imagen
+const handleUploadImage = async (file: File, type: string, description: string) => {
+  try {
+    setIsUploading(true);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    formData.append('description', description);
+
+    const response = await fetch(`/api/patients/${id}/images`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setImages(prevImages => [...prevImages, data.image]);
+      setShowUploadModal(false);
+      toast.success('Imagen subida exitosamente');
+    } else {
+      const error = await response.json();
+      toast.error(error.error || 'Error al subir la imagen');
+    }
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    toast.error('Error al subir la imagen');
+  } finally {
+    setIsUploading(false);
+  }
+};
 
 if (loadingPatient) {
   return <PatientPageSkeleton />;
@@ -136,11 +193,73 @@ if (loadingPatient) {
               </Button>
             </Link>
           </div>
-          <CardItem icon={<Icons.ImageIcon className="w-5 h-5" />} title="Imágenes Médicas" description="No se han cargado imágenes." />
+          
+          {/* Card de Imágenes Médicas - Funcional */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3 text-sky-600">
+                <Icons.ImageIcon className="w-5 h-5" />
+                <h3 className="text-lg font-semibold">Imágenes Médicas</h3>
+              </div>
+              <span className="text-xs bg-sky-100 text-sky-700 px-2 py-1 rounded-full font-medium">
+                {images.length} {images.length === 1 ? 'imagen' : 'imágenes'}
+              </span>
+            </div>
+            
+            {images.length === 0 ? (
+              <p className="text-slate-600 text-sm mb-4">No se han cargado imágenes médicas.</p>
+            ) : (
+              <div className="mb-4">
+                <div className="grid grid-cols-3 gap-2">
+                  {images.slice(0, 3).map((image, index) => (
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                      <img
+                        src={`/api/images/${image.gridfsId}`}
+                        alt={image.originalName}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+                {images.length > 3 && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    +{images.length - 3} imágenes más
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowUploadModal(true)}
+                className="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm cursor-pointer"
+              >
+                <Icons.Upload className="w-4 h-4 mr-2" />
+                Subir imagen
+              </Button>
+              {images.length > 0 && (
+                <Link href={`/doctor/pacientes/${id}/imagenes`} className="flex-1">
+                  <Button variant="outline" className="w-full text-sm cursor-pointer">
+                    <Icons.Eye className="w-4 h-4 mr-2" />
+                    Ver todas
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+          
           <CardItem icon={<Icons.FileText className="w-5 h-5" />} title="Recetas" description="No hay recetas activas." />
           <CardItem icon={<Icons.FolderOpen className="w-5 h-5" />} title="Documentos Adjuntos" description="Sin archivos registrados." />
         </section>
       </div>
+
+      {/* Modal de subir imagen */}
+      <UploadImageModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onUpload={handleUploadImage}
+        isUploading={isUploading}
+      />
     </div>
   );
 }

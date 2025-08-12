@@ -118,10 +118,7 @@ export default function AboutPage() {
             </p>
             
             <div className="flex flex-wrap justify-center gap-4">
-              <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
-                <span>Conoce Nuestro Equipo</span>
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
+             
               <Button 
                 variant="outline" 
                 className="h-14 px-8 border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/10 hover:border-cyan-400/50 rounded-full transition-all duration-300"
@@ -138,7 +135,7 @@ export default function AboutPage() {
               <div className="text-slate-300 text-sm">Años de experiencia</div>
             </div>
             <div className="bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm rounded-xl p-6 text-center animate-fade-in-up" style={{animationDelay: '200ms'}}>
-              <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">5000+</div>
+              <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">1,200+</div>
               <div className="text-slate-300 text-sm">Pacientes atendidos</div>
             </div>
             <div className="bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm rounded-xl p-6 text-center animate-fade-in-up" style={{animationDelay: '300ms'}}>

@@ -87,7 +87,8 @@ const HomePageContent = () => {
       checkUserPatient();
     }
   }, [session, status, patientIdFromURL]);
-
+        
+//test
   useEffect(() => {
     const fetchPatient = async () => {
       if (!patientId) return;

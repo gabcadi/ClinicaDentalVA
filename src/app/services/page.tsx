@@ -171,15 +171,7 @@ export default function ServicesPage() {
                     <CardTitle className="text-xl font-semibold text-white">{service.title}</CardTitle>
                     <CardDescription className="text-slate-300/80">{service.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-2">
-                    <Button 
-                      variant="link" 
-                      className="p-0 text-cyan-400 hover:text-cyan-300 font-medium group-hover:underline transition-all"
-                      onClick={() => setActiveService(service.id)}
-                    >
-                      Ver más detalles <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </CardContent>
+                  
                 </Card>
               </div>
             ))}
@@ -276,10 +268,7 @@ export default function ServicesPage() {
                   </ul>
                 </div>
                 
-                <Button className="h-12 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
-                  <span>Solicitar este servicio</span>
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                
               </div>
             </div>
           ))}
@@ -375,10 +364,7 @@ export default function ServicesPage() {
                   Agenda tu cita hoy mismo y da el primer paso hacia una sonrisa más saludable y radiante. Nuestro equipo está esperando para atenderte.
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
-                  <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
-                    <span>Agendar Cita Ahora</span>
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                  
                 </div>
               </div>
             </div>

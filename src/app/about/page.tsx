@@ -461,12 +461,7 @@ export default function AboutPage() {
                   Agenda tu consulta hoy mismo y experimenta una atención dental de primera calidad 
                   con nuestro equipo de especialistas.
                 </p>
-                <div className="flex flex-wrap justify-center gap-4">
-                  <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
-                    <span>Agendar Cita Ahora</span>
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </div>
+                
               </div>
             </div>
           </div>

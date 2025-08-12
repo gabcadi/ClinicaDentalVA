@@ -248,9 +248,7 @@ if (loadingPatient) {
             </div>
           </div>
           
-          <CardItem icon={<Icons.FileText className="w-5 h-5" />} title="Recetas" description="No hay recetas activas." />
-          <CardItem icon={<Icons.FolderOpen className="w-5 h-5" />} title="Documentos Adjuntos" description="Sin archivos registrados." />
-        </section>
+          </section>
       </div>
 
       {/* Modal de subir imagen */}

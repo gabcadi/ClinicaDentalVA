@@ -12,30 +12,14 @@ const features = [
     description: 'Visualiza y consulta las citas médicas programadas.',
     href: '/doctor/appointments',
   },
-  {
-    icon: <ClipboardList className="w-6 h-6 text-sky-600" />,
-    title: 'Detalles de consultas',
-    description: 'Registra y consulta la evolución del paciente.',
-    href: '/consultas',
-  },
-  {
-    icon: <Search className="w-6 h-6 text-sky-600" />,
-    title: 'Historial del paciente',
-    description: 'Busca y accede al historial clínico completo de tus pacientes.',
-    href: '/historial',
-  },
+ 
   {
     icon: <Calendar className="w-6 h-6 text-sky-600" />,
     title: 'Reportes médicos',
     description: 'Visualiza un calendario detallado de citas médicas.',
     href: '/doctor/calendar',
   },
-  {
-    icon: <ImageIcon className="w-6 h-6 text-sky-600" />,
-    title: 'Exámenes e Imágenes',
-    description: 'Almacena y consulta resultados de exámenes e imágenes médicas.',
-    href: '/examenes',
-  },
+  
   {
     icon: <FilePlus2 className="w-6 h-6 text-sky-600" />,
     title: 'Registro completo',

@@ -167,7 +167,7 @@ export default function AboutPage() {
               
               <div className="space-y-6 text-slate-300/80">
                 <p>
-                  Fundada en 2010 por el Dr. Carlos Vargas y la Dra. María Araya, nuestra clínica 
+                  Fundada en 2010 por la Dra. Verónica Bruno, nuestra clínica 
                   nació con la visión de transformar la experiencia dental en Costa Rica, combinando 
                   tecnología de punta con un trato humano y personalizado.
                 </p>

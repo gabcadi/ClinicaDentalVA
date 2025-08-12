@@ -3,6 +3,7 @@ declare module "next-auth" {
     user: {
       name?: string | null;
       email?: string | null;
+      image?: string | null;
       role?: "admin" | "user" | "doctor";
     };
   }
@@ -11,6 +12,7 @@ declare module "next-auth" {
     id: string;
     name?: string | null;
     email?: string | null;
+    image?: string | null;
     role?: "admin" | "user" | "doctor";
   }
 }

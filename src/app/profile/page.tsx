@@ -241,10 +241,7 @@ export default function ProfilePage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-center pt-4">
-                  <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400/50 rounded-full transition-all duration-300 group">
-                    <span>Editar perfil</span>
-                    <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                  </Button>
+                  
                 </CardFooter>
               </Card>
             </div>

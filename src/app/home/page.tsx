@@ -21,35 +21,22 @@ const isUser = (userId: any): userId is UserType => {
 };
 
 const HomePageContent = () => {
-  const params = useParams();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   
   const [mounted, setMounted] = useState(false);
   const [currentService, setCurrentService] = useState(0);
-  
-  // Wrap searchParams in a client component
-  const SearchParamsWrapper = () => {
-    const searchParams = useSearchParams();
-    return <SearchParamsConsumer searchParams={searchParams} />;
-  };
-
-  // Create a separate component that consumes the searchParams
-  const SearchParamsConsumer = ({ searchParams }: { searchParams: ReturnType<typeof useSearchParams> }) => {
-    const patientIdFromURL = searchParams.get("patientId");
-    
-    // Update parent component state
-    useEffect(() => {
-      setPatientId(patientIdFromURL);
-    }, [patientIdFromURL]);
-    
-    return null;
-  };
-  
-  // Initialize patientId with null - will be set by the SearchParamsConsumer
-  const [patientIdFromURL, setPatientIdFromURL] = useState<string | null>(null);
-  const [patientId, setPatientId] = useState<string | null>(patientIdFromURL);
+  const [patientId, setPatientId] = useState<string | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Get patientId from URL params
+  useEffect(() => {
+    const patientIdFromURL = searchParams.get("patientId");
+    if (patientIdFromURL) {
+      setPatientId(patientIdFromURL);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     setMounted(true);
@@ -59,14 +46,12 @@ const HomePageContent = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // This effect checks if the user is authenticated and has a role of 'user'
+  // Check if user is authenticated and has role 'user', then fetch their patient profile
   useEffect(() => {
     const checkUserPatient = async () => {
-      if (status === 'authenticated' && session?.user?.role === 'user' && !patientId) {
-        // If there's an authenticated user with 'user' role, try to fetch their patient profile
+      if (status === 'authenticated' && session?.user && (session.user as any)?.role === 'user' && !patientId) {
         try {
           setLoading(true);
-          // Access email instead of id
           const response = await fetch(`/api/patients/by-user?email=${encodeURIComponent(session.user.email || '')}`);
           if (response.ok) {
             const data = await response.json();
@@ -82,12 +67,10 @@ const HomePageContent = () => {
       }
     };
 
-    if (!patientIdFromURL) {
-      checkUserPatient();
-    }
-  }, [session, status, patientIdFromURL]);
-        
-//test
+    checkUserPatient();
+  }, [session, status, patientId]);
+
+  // Fetch patient data when patientId is available
   useEffect(() => {
     const fetchPatient = async () => {
       if (!patientId) return;
@@ -98,7 +81,6 @@ const HomePageContent = () => {
         setPatient(data);
       } catch (error) {
         console.error("Error fetching patient:", error);
-        // toast.error("Error al cargar la información del paciente");
       } finally {
         setLoading(false);
       }
@@ -151,11 +133,6 @@ const HomePageContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-750/40 to-slate-300 relative overflow-hidden">
-      {/* Wrap useSearchParams in Suspense */}
-      <Suspense fallback={null}>
-        <SearchParamsWrapper />
-      </Suspense>
-      
       {/* Partículas animadas */}
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 100 }).map((_, i) => (
@@ -173,7 +150,6 @@ const HomePageContent = () => {
             <div className="text-center max-w-4xl mx-auto">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-sm border border-cyan-500/20 rounded-full px-6 py-3 mb-8">
                 <Shield className="w-5 h-5 text-cyan-400" />
-
                 <span className="text-cyan-300 font-medium">
                   Clínica Dental Vargas Araya
                 </span>
@@ -227,11 +203,13 @@ const HomePageContent = () => {
                   Ver servicios
                 </Button>
               </div>
+
+              
             </div>
           </div>
         </section>
 
-        {/* Services Showcase */}
+        {/* Services Section */}
         <section className="py-20 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
@@ -278,7 +256,7 @@ const HomePageContent = () => {
           </div>
         </section>
 
-        {/* Stats  */}
+        {/* Stats Section */}
         <section className="py-20 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-3 gap-8 text-center">

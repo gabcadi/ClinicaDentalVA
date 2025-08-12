@@ -43,13 +43,12 @@ export async function GET(
         const response = new NextResponse(buffer, {
           status: 200,
           headers: {
-            'Content-Type': file.contentType || 'image/jpeg',
+            'Content-Type': file.contentType || 'application/octet-stream',
             'Content-Length': file.length.toString(),
-            'Content-Disposition': `inline; filename="${file.filename || 'image'}"`,
+            'Content-Disposition': `attachment; filename="${file.filename || 'medical-image'}"`,
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET',
             'Access-Control-Allow-Headers': 'Content-Type',
-            'Cache-Control': 'public, max-age=31536000, immutable',
           },
         });
 
@@ -63,7 +62,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error in image API:', error);
+    console.error('Error in download API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

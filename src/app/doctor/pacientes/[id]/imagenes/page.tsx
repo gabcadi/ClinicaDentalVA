@@ -11,7 +11,8 @@ import {
   ZoomIn,
   Calendar,
   FileType,
-  Eye
+  Eye,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -44,6 +45,32 @@ export default function PatientImagesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<MedicalImage | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [imageToDelete, setImageToDelete] = useState<MedicalImage | null>(null);
+
+  // Función para descargar imagen
+  const handleDownloadImage = async (image: MedicalImage) => {
+    try {
+      // Usar el endpoint específico para descargas
+      const downloadUrl = `/api/images/${image.gridfsId}/download`;
+      
+      const response = await fetch(downloadUrl);
+      if (!response.ok) throw new Error('Error al descargar imagen');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = image.originalName || 'imagen-medica';
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      // Fallback: try direct link
+      window.open(`/api/images/${image.gridfsId}/download`, '_blank');
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,8 +111,6 @@ export default function PatientImagesPage() {
   }, [patientId]);
 
   const handleDeleteImage = async (imageId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta imagen?')) return;
-
     try {
       setIsDeleting(imageId);
       
@@ -95,6 +120,7 @@ export default function PatientImagesPage() {
 
       if (response.ok) {
         setImages(prevImages => prevImages.filter(img => img._id !== imageId));
+        setImageToDelete(null);
       } else {
         alert('Error al eliminar la imagen');
       }
@@ -260,19 +286,14 @@ export default function PatientImagesPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = image.url;
-                        link.download = image.originalName;
-                        link.click();
-                      }}
+                      onClick={() => handleDownloadImage(image)}
                     >
                       <Download className="w-3 h-3" />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteImage(image._id)}
+                      onClick={() => setImageToDelete(image)}
                       disabled={isDeleting === image._id}
                       className="text-red-600 hover:bg-red-50 border-red-200"
                     >
@@ -287,6 +308,57 @@ export default function PatientImagesPage() {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {imageToDelete && (
+          <Dialog open={!!imageToDelete} onOpenChange={() => setImageToDelete(null)}>
+            <DialogContent className="max-w-md">
+              <div className="flex flex-col items-center text-center p-6">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+                
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Eliminar imagen
+                </h3>
+                
+                <p className="text-sm text-gray-600 mb-6">
+                  ¿Estás seguro de que quieres eliminar la imagen "{imageToDelete.originalName}"? 
+                  Esta acción no se puede deshacer.
+                </p>
+
+                <div className="flex gap-3 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => setImageToDelete(null)}
+                    className="flex-1"
+                    disabled={isDeleting === imageToDelete._id}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => imageToDelete._id && handleDeleteImage(imageToDelete._id)}
+                    className="flex-1"
+                    disabled={isDeleting === imageToDelete._id}
+                  >
+                    {isDeleting === imageToDelete._id ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Eliminando...
+                      </div>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Eliminar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
 
         {/* Image Modal */}

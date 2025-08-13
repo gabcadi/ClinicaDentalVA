@@ -12,7 +12,7 @@ const prescriptionSchema = new Schema<IPrescription>({
   medication: { type: String, required: true },
   dosage: { type: String, required: true },
   duration: { type: String, required: true },
-  instructions: { type: String, required: true },
+  instructions: { type: String, required: true, minlength: 1 }, // Ensure it's not just an empty string
   createdAt: { type: Date, default: Date.now }
 });
 

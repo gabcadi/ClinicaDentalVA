@@ -116,16 +116,6 @@ export default function AboutPage() {
               Más de 15 años de experiencia brindando servicios odontológicos de excelencia 
               en Costa Rica, con un equipo comprometido con su bienestar y salud dental.
             </p>
-            
-            <div className="flex flex-wrap justify-center gap-4">
-             
-              <Button 
-                variant="outline" 
-                className="h-14 px-8 border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/10 hover:border-cyan-400/50 rounded-full transition-all duration-300"
-              >
-                Agendar Cita
-              </Button>
-            </div>
           </div>
           
           {/* Stats Section */}

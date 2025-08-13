@@ -39,6 +39,35 @@ interface Appointment {
   updatedAt: string;
 }
 
+// Función para calcular el estado real de la cita
+const getAppointmentStatus = (appointment: Appointment) => {
+  if (appointment.confirmed) {
+    return {
+      status: 'Confirmada',
+      className: 'bg-green-100 text-green-700 border border-green-200',
+      icon: <CheckCircle className="w-4 h-4" />
+    };
+  }
+
+  // Combinar fecha y hora para hacer la comparación completa
+  const appointmentDateTime = new Date(`${appointment.date}T${appointment.time}`);
+  const now = new Date();
+
+  if (appointmentDateTime < now) {
+    return {
+      status: 'Finalizada',
+      className: 'bg-blue-100 text-blue-700 border border-blue-200',
+      icon: <CheckCircle className="w-4 h-4" />
+    };
+  } else {
+    return {
+      status: 'Pendiente',
+      className: 'bg-orange-100 text-orange-700 border border-orange-200',
+      icon: <AlertCircle className="w-4 h-4" />
+    };
+  }
+};
+
 export default function PatientAppointments() {
   const params = useParams();
   const patientId = params?.id as string;
@@ -233,17 +262,9 @@ export default function PatientAppointments() {
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
-                      appointment.confirmed 
-                        ? 'bg-green-100 text-green-700 border border-green-200' 
-                        : 'bg-orange-100 text-orange-700 border border-orange-200'
-                    }`}>
-                      {appointment.confirmed ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4" />
-                      )}
-                      {appointment.confirmed ? 'Confirmada' : 'Pendiente'}
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getAppointmentStatus(appointment).className}`}>
+                      {getAppointmentStatus(appointment).icon}
+                      {getAppointmentStatus(appointment).status}
                     </div>
 
                     <Link href={`/appointments/${appointment._id}`}>

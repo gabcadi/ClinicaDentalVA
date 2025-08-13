@@ -16,7 +16,6 @@ async function connectDB() {
 
 	try {
 		await mongoose.connect(MONGODB_URI, {});
-		console.log('MongoDB connected successfully');
 		// Initialize GridFS after connection
 		initGridFS();
 	} catch (error) {

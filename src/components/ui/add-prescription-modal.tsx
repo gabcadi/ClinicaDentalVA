@@ -37,7 +37,15 @@ export default function AddPrescriptionModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.medication.trim()) return;
+    
+    // Validar que todos los campos requeridos estén llenos
+    if (!formData.medication.trim() || 
+        !formData.dosage.trim() || 
+        !formData.duration.trim() || 
+        !formData.instructions.trim()) {
+      console.error('All fields are required');
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -140,6 +148,7 @@ export default function AddPrescriptionModal({
               className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               rows={3}
               disabled={isLoading}
+              required
             />
           </div>
 

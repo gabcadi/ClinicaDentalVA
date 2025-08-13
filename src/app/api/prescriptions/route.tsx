@@ -3,34 +3,42 @@ import connectDB from '../../utils/mongodb';
 import Prescription from '../../models/prescription';
 
 export async function POST(request: Request) {
-  console.log('Starting prescription creation...');
-  
   try {
-    console.log('Connecting to DB...');
     await connectDB();
-    console.log('DB connected successfully');
 
     const body = await request.json();
-    console.log('Request body received:', JSON.stringify(body, null, 2));
 
     const { appointmentId, medication, dosage, duration, instructions } = body;
 
     // Validate input
     if (!appointmentId) {
-      console.error('Missing appointmentId');
       return NextResponse.json({ message: 'appointmentId es requerido' }, { status: 400 });
     }
 
-    console.log('Creating new prescription document...');
+    if (!medication || !medication.trim()) {
+      return NextResponse.json({ message: 'medication es requerido' }, { status: 400 });
+    }
+
+    if (!dosage || !dosage.trim()) {
+      return NextResponse.json({ message: 'dosage es requerido' }, { status: 400 });
+    }
+
+    if (!duration || !duration.trim()) {
+      return NextResponse.json({ message: 'duration es requerido' }, { status: 400 });
+    }
+
+    if (!instructions || !instructions.trim()) {
+      return NextResponse.json({ message: 'instructions es requerido' }, { status: 400 });
+    }
+
     const newPrescription = await Prescription.create({
       appointmentId,
-      medication,
-      dosage,
-      duration,
-      instructions: instructions || '', // Make optional
+      medication: medication.trim(),
+      dosage: dosage.trim(),
+      duration: duration.trim(),
+      instructions: instructions.trim(),
     });
 
-    console.log('Prescription created successfully:', newPrescription);
     return NextResponse.json(newPrescription, { status: 201 });
 
   } catch (error) {

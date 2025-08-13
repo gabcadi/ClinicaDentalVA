@@ -25,6 +25,7 @@ export default function PacienteDetalle() {
   const [paciente, setPaciente] = useState<Patient | null>(null);
   const [user, setUser] = useState<User | null>(null); 
   const [images, setImages] = useState<MedicalImage[]>([]);
+  const [prescriptionsCount, setPrescriptionsCount] = useState<number>(0);
   const [loadingPatient, setLoadingPatient] = useState(true);
   const [loadingUser, setLoadingUser] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -46,6 +47,39 @@ useEffect(() => {
   };
 
   fetchPaciente();
+}, [id]);
+
+// Efecto para contar las recetas del paciente
+useEffect(() => {
+  const fetchPrescriptionsCount = async () => {
+    if (!id) return;
+
+    try {
+      // Obtener todas las citas del paciente
+      const appointmentsResponse = await fetch(`/api/appointments?patientId=${id}`);
+      const appointments = await appointmentsResponse.json();
+
+      if (appointments.length === 0) {
+        setPrescriptionsCount(0);
+        return;
+      }
+
+      // Contar todas las recetas para cada cita (desde prescriptions embebidas)
+      let totalPrescriptions = 0;
+
+      for (const appointment of appointments) {
+        if (appointment.prescriptions && Array.isArray(appointment.prescriptions)) {
+          totalPrescriptions += appointment.prescriptions.length;
+        }
+      }
+
+      setPrescriptionsCount(totalPrescriptions);
+    } catch (error) {
+      console.error('Error fetching prescriptions count:', error);
+    }
+  };
+
+  fetchPrescriptionsCount();
 }, [id]);
 
 useEffect(() => {
@@ -194,6 +228,39 @@ if (loadingPatient) {
             </Link>
           </div>
           
+          {/* Card de Recetas - Funcional */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3 text-sky-600">
+                <Icons.FileText className="w-5 h-5" />
+                <h3 className="text-lg font-semibold">Recetas</h3>
+              </div>
+              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium">
+                {prescriptionsCount} {prescriptionsCount === 1 ? 'receta' : 'recetas'}
+              </span>
+            </div>
+            
+            {prescriptionsCount === 0 ? (
+              <p className="text-slate-600 text-sm mb-4">No hay recetas registradas.</p>
+            ) : (
+              <p className="text-slate-600 text-sm mb-4">
+                {prescriptionsCount === 1 
+                  ? 'Hay 1 receta médica registrada para este paciente.' 
+                  : `Hay ${prescriptionsCount} recetas médicas registradas para este paciente.`
+                }
+              </p>
+            )}
+
+            <Link href={`/doctor/pacientes/${id}/recetas`}>
+              <Button className="w-full cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Icons.FileText className="w-4 h-4 mr-2" />
+                {prescriptionsCount === 0 ? 'Ver recetas' : 'Ver todas las recetas'}
+              </Button>
+            </Link>
+          </div>
+          
+          <CardItem icon={<Icons.FolderOpen className="w-5 h-5" />} title="Documentos Adjuntos" description="Sin archivos registrados." />
+          
           {/* Card de Imágenes Médicas - Funcional */}
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
@@ -248,8 +315,6 @@ if (loadingPatient) {
             </div>
           </div>
           
-          <CardItem icon={<Icons.FileText className="w-5 h-5" />} title="Recetas" description="No hay recetas activas." />
-          <CardItem icon={<Icons.FolderOpen className="w-5 h-5" />} title="Documentos Adjuntos" description="Sin archivos registrados." />
         </section>
       </div>
 

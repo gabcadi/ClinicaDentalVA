@@ -26,7 +26,8 @@ import { Patient, User as UserType } from "@/lib/types/interfaces";
 import AddPrescriptionModal from "@/components/ui/add-prescription-modal";
 import AddMaterialModal from "@/components/ui/add-material-modal";
 import ConfirmDeleteModal from "@/components/ui/confirm-delete-modal";
-import { IMaterial } from "@/app/models/appointments";
+import { IMaterial, IPrescription } from "@/app/models/appointments";
+import { toast } from "sonner";
 
 interface Appointment {
   _id: string;
@@ -38,9 +39,9 @@ interface Appointment {
   createdAt: string;
   updatedAt: string;
   materials?: IMaterial[];
+  prescriptions?: IPrescription[];
   doctorReport?: string;
   totalPrice?: number;
-  prescriptionId?: string[] | null;
 }
 interface Prescription {
   _id: string;
@@ -103,8 +104,33 @@ export default function AppointmentDetail() {
     setShowMaterialModal(false);
   };
 
+  // Función para refrescar solo las recetas
+  const refreshPrescriptions = async () => {
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}/prescriptions`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPrescriptions(data.prescriptions || []);
+        return data.prescriptions || [];
+      } else {
+        console.error("Error refreshing prescriptions:", response.status);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error in refreshPrescriptions:", error);
+      return [];
+    }
+  };
+
   const handleSaveReport = async () => {
-    if (!report.trim()) return;
+    if (!report.trim()) {
+      toast.error('Reporte vacío', {
+        description: 'Por favor escribí el reporte médico antes de guardar',
+        duration: 3000,
+      });
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -121,17 +147,31 @@ export default function AppointmentDetail() {
       }
 
       const updatedAppointment = await response.json();
-      setAppointment(updatedAppointment); // Actualiza el estado local
+      setAppointment(updatedAppointment);
+      
+      toast.success('Reporte guardado correctamente', {
+        description: 'El reporte médico se ha registrado exitosamente',
+        duration: 3000,
+      });
     } catch (error) {
       console.error(error);
-      alert("Error al guardar el reporte.");
+      toast.error('Error al guardar el reporte', {
+        description: 'No se pudo guardar el reporte médico',
+        duration: 3000,
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleSaveAmount = async () => {
-    if (!amount.trim()) return;
+    if (!amount.trim() || isNaN(Number(amount))) {
+      toast.error('Monto inválido', {
+        description: 'Por favor ingresá un monto válido',
+        duration: 3000,
+      });
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -149,15 +189,19 @@ export default function AppointmentDetail() {
       }
 
       const updatedAppointment = await response.json();
-      setAppointment(updatedAppointment); // Actualiza el estado local
+      setAppointment(updatedAppointment);
+      setAmount('');
+      
+      toast.success('Monto guardado correctamente', {
+        description: `Se registró ₡${Number(amount).toLocaleString('es-CR')}`,
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Error al guardar el precio total:", error);
-
-      if (error instanceof Error) {
-        alert("Error al guardar el precio total: " + error.message);
-      } else {
-        alert("Error desconocido al guardar el precio total.");
-      }
+      toast.error('Error al guardar el monto', {
+        description: 'No se pudo registrar el monto de la cita',
+        duration: 3000,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -170,35 +214,60 @@ export default function AppointmentDetail() {
     instructions: string;
   }) => {
     try {
-      console.log("Saving prescription:", prescriptionData); // Debug log
+      // Mostrar toast de carga
+      toast.loading('Guardando receta...', {
+        id: 'save-prescription',
+        duration: 0,
+      });
 
-      const res = await fetch("/api/prescriptions", {
+      const response = await fetch(`/api/appointments/${appointmentId}/prescriptions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...prescriptionData,
-          appointmentId: appointmentId,
-        }),
+        body: JSON.stringify(prescriptionData),
       });
 
-      console.log("Response status:", res.status); // Debug log
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Error response:", errorText); // Debug log
-        throw new Error(`Failed to save prescription: ${errorText}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al agregar receta');
       }
 
-      const newPrescription = await res.json();
-      console.log("Saved prescription:", newPrescription); // Debug log
-
-      setPrescriptions((prev) => [...prev, newPrescription]);
+      const result = await response.json();
+      
+      // Obtener la nueva receta del resultado
+      let newPrescription = result.prescription;
+      
+      // Si no viene en result.prescription, tomarla del appointment actualizado
+      if (!newPrescription && result.appointment && result.appointment.prescriptions) {
+        const prescriptions = result.appointment.prescriptions;
+        newPrescription = prescriptions[prescriptions.length - 1];
+      }
+      
+      if (newPrescription) {
+        setPrescriptions(prev => [...prev, newPrescription]);
+      } else {
+        console.error('No prescription found in server response');
+        throw new Error('No se pudo obtener la receta creada');
+      }
       closePrescriptionModal();
+      
+      // Mostrar toast de éxito
+      toast.dismiss('save-prescription');
+      toast.success('Receta guardada correctamente', {
+        description: `Se agregó ${prescriptionData.medication} a la cita`,
+        duration: 3000,
+      });
+
     } catch (error) {
       console.error("Error saving prescription:", error);
-      alert(`Error al guardar la receta: ${error instanceof Error ? error.message : String(error)}`);
+      
+      // Mostrar toast de error
+      toast.dismiss('save-prescription');
+      toast.error('Error al guardar la receta', {
+        description: error instanceof Error ? error.message : 'No se pudo guardar la receta médica',
+        duration: 4000,
+      });
     }
   };
 
@@ -269,20 +338,341 @@ export default function AppointmentDetail() {
       const url = window.location.href;
       await navigator.clipboard.writeText(url);
       
-      // Mostrar feedback visual (opcional - puedes agregar un toast/notification)
-      alert('¡Link copiado al portapapeles!');
+      // Mostrar toast de éxito
+      toast.success('¡Link copiado al portapapeles!', {
+        description: 'El enlace de la cita se ha copiado correctamente',
+        duration: 3000,
+      });
     } catch (error) {
       console.error('Error copying to clipboard:', error);
       
       // Fallback para navegadores que no soportan clipboard API
-      const textArea = document.createElement('textarea');
-      textArea.value = window.location.href;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      alert('¡Link copiado al portapapeles!');
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = window.location.href;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        toast.success('¡Link copiado al portapapeles!', {
+          description: 'El enlace de la cita se ha copiado correctamente',
+          duration: 3000,
+        });
+      } catch (fallbackError) {
+        toast.error('Error al copiar el enlace', {
+          description: 'No se pudo copiar el enlace al portapapeles',
+          duration: 3000,
+        });
+      }
+    }
+  };
+
+  // Función para descargar PDF de la cita
+  const handleDownload = async () => {
+    if (!appointment || !patient || !user) {
+      toast.error('Error al generar documento', {
+        description: 'No se pudo obtener la información necesaria',
+        duration: 3000,
+      });
+      return;
+    }
+
+    try {
+      toast.loading('Preparando documento...', {
+        id: 'download-pdf',
+        duration: 0,
+      });
+
+      // Crear contenido HTML para el PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Cita Médica - ${user.fullName}</title>
+          <style>
+            @media print {
+              body { 
+                font-family: 'Arial', sans-serif; 
+                margin: 0; 
+                padding: 20px;
+                color: #333; 
+                font-size: 12px;
+                line-height: 1.4;
+              }
+              .no-print { display: none !important; }
+              .page-break { page-break-after: always; }
+            }
+            body { 
+              font-family: 'Arial', sans-serif; 
+              margin: 20px; 
+              color: #333; 
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 30px; 
+              border-bottom: 3px solid #0ea5e9; 
+              padding-bottom: 20px; 
+            }
+            .header h1 { 
+              color: #0ea5e9; 
+              margin: 0; 
+              font-size: 24px;
+              font-weight: bold;
+            }
+            .header p {
+              margin: 5px 0 0 0;
+              color: #64748b;
+              font-size: 14px;
+            }
+            .section { 
+              margin-bottom: 25px; 
+              break-inside: avoid;
+            }
+            .section h2 { 
+              color: #1e293b; 
+              border-bottom: 2px solid #e2e8f0; 
+              padding-bottom: 8px;
+              margin-bottom: 15px;
+              font-size: 16px;
+              font-weight: bold;
+            }
+            .info-grid { 
+              display: grid; 
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+              gap: 15px; 
+              margin: 15px 0; 
+            }
+            .info-item { 
+              background: #f8fafc; 
+              padding: 15px; 
+              border-radius: 8px; 
+              border-left: 4px solid #0ea5e9;
+            }
+            .info-label { 
+              font-weight: bold; 
+              color: #64748b; 
+              font-size: 11px; 
+              text-transform: uppercase; 
+              margin-bottom: 5px;
+            }
+            .info-value { 
+              font-size: 14px; 
+              color: #1e293b;
+              font-weight: 500;
+            }
+            .list-item { 
+              background: #f1f5f9; 
+              margin: 8px 0; 
+              padding: 15px; 
+              border-radius: 6px; 
+              border-left: 4px solid #0ea5e9;
+              break-inside: avoid;
+            }
+            .list-item strong {
+              color: #1e293b;
+            }
+            .footer { 
+              margin-top: 40px; 
+              text-align: center; 
+              font-size: 11px; 
+              color: #64748b; 
+              border-top: 1px solid #e2e8f0; 
+              padding-top: 20px; 
+            }
+            .status-confirmed {
+              color: #059669;
+              font-weight: bold;
+            }
+            .status-pending {
+              color: #d97706;
+              font-weight: bold;
+            }
+            .status-finished {
+              color: #0284c7;
+              font-weight: bold;
+            }
+            .print-button {
+              background: #0ea5e9;
+              color: white;
+              border: none;
+              padding: 12px 24px;
+              border-radius: 6px;
+              font-size: 14px;
+              cursor: pointer;
+              margin: 20px auto;
+              display: block;
+            }
+            .print-button:hover {
+              background: #0284c7;
+            }
+            @media screen {
+              .print-instructions {
+                background: #eff6ff;
+                border: 1px solid #bfdbfe;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+                color: #1e40af;
+                text-align: center;
+              }
+            }
+            @media print {
+              .print-instructions { display: none; }
+              .print-button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-instructions no-print">
+            <p><strong>Para descargar este documento como PDF:</strong></p>
+            <p>1. Haga clic en "Imprimir Documento" o presione Ctrl+P</p>
+            <p>2. En el destino, seleccione "Guardar como PDF"</p>
+            <p>3. Haga clic en "Guardar"</p>
+          </div>
+          
+          <button class="print-button no-print" onclick="window.print()">
+            🖨️ Imprimir Documento
+          </button>
+
+          <div class="header">
+            <h1>Reporte de Cita Médica</h1>
+            <p>Clínica Dental VA</p>
+            <p>Documento generado el ${new Date().toLocaleDateString('es-CR')} a las ${new Date().toLocaleTimeString('es-CR')}</p>
+          </div>
+
+          <div class="section">
+            <h2>Información del Paciente</h2>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Nombre Completo</div>
+                <div class="info-value">${user.fullName}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Teléfono</div>
+                <div class="info-value">${patient.phone || 'No registrado'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-value">${user.email || 'No registrado'}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Edad</div>
+                <div class="info-value">${patient.age} años</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Dirección</div>
+                <div class="info-value">${patient.address || 'No registrado'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Detalles de la Cita</h2>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Fecha</div>
+                <div class="info-value">${new Date(appointment.date).toLocaleDateString('es-CR')}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Hora</div>
+                <div class="info-value">${appointment.time}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Estado</div>
+                <div class="info-value ${getAppointmentStatus(appointment).pdfClass}">
+                  ${getAppointmentStatus(appointment).status}
+                </div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">ID de Cita</div>
+                <div class="info-value">${appointment._id}</div>
+              </div>
+            </div>
+            <div class="info-item" style="margin-top: 15px;">
+              <div class="info-label">Descripción</div>
+              <div class="info-value">${appointment.description}</div>
+            </div>
+          </div>
+
+          ${appointment.doctorReport ? `
+          <div class="section">
+            <h2>Reporte Médico</h2>
+            <div class="info-item">
+              <div class="info-value">${appointment.doctorReport.replace(/\n/g, '<br>')}</div>
+            </div>
+          </div>` : ''}
+
+          ${prescriptions.length > 0 ? `
+          <div class="section">
+            <h2>Recetas Médicas</h2>
+            ${prescriptions.map(prescription => `
+              <div class="list-item">
+                <strong>Medicamento:</strong> ${prescription.medication}<br>
+                <strong>Dosis:</strong> ${prescription.dosage}<br>
+                <strong>Duración:</strong> ${prescription.duration}<br>
+                <strong>Instrucciones:</strong> ${prescription.instructions}
+              </div>
+            `).join('')}
+          </div>` : ''}
+
+          ${materials.length > 0 ? `
+          <div class="section">
+            <h2>Materiales Utilizados</h2>
+            ${materials.map(material => `
+              <div class="list-item">
+                <strong>Material:</strong> ${material.name}<br>
+                <strong>Tipo:</strong> ${material.type}<br>
+                <strong>Cantidad:</strong> ${material.quantity} unidades
+              </div>
+            `).join('')}
+          </div>` : ''}
+
+          ${appointment.totalPrice ? `
+          <div class="section">
+            <h2>Información de Pago</h2>
+            <div class="info-item">
+              <div class="info-label">Total de la Cita</div>
+              <div class="info-value">₡${Number(appointment.totalPrice).toLocaleString('es-CR')}</div>
+            </div>
+          </div>` : ''}
+
+          <div class="footer">
+            <p>Clínica Dental VA - Sistema de Gestión de Citas</p>
+            <p>Este documento contiene información médica confidencial</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Abrir nueva ventana con el documento
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        
+        // Forzar el foco en la nueva ventana
+        printWindow.focus();
+        
+        toast.dismiss('download-pdf');
+        toast.success('Documento abierto', {
+          description: 'El documento se ha abierto en una nueva pestaña.',
+          duration: 5000,
+        });
+      } else {
+        throw new Error('El navegador bloqueó la ventana emergente. Por favor permite las ventanas emergentes y vuelve a intentar.');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.dismiss('download-pdf');
+      toast.error('Error al generar documento', {
+        description: error instanceof Error ? error.message : 'No se pudo generar el documento de la cita',
+        duration: 4000,
+      });
     }
   };
 
@@ -291,110 +681,65 @@ export default function AppointmentDetail() {
   const { id } = useParams();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch basic appointment data
-        const res = await fetch(`/api/appointments/${id}`);
-        const data = await res.json();
-        setAppointment(data);
-
-        // Get patient data if exists
-        if (data?.patientId) {
-          const patientData = await getPatientById(data.patientId);
-          setPatient(patientData);
-
-          // Type guard for user data
-          if (isUser(patientData?.userId)) {
-            const userData = await getUserById(patientData.userId._id);
-            setUser(userData);
-          }
-        }
-
-        // Get prescriptions
-        const prescriptionsRes = await fetch(
-          `/api/prescriptions?appointmentId=${id}`
-        );
-        const prescriptionsData = await prescriptionsRes.json();
-        setPrescriptions(prescriptionsData);
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-      }
-    };
-
-    if (id) fetchData();
-  }, [id]);
-
-  useEffect(() => {
-    const fetchAppointment = async () => {
+    const fetchAllData = async () => {
       if (!appointmentId) return;
 
       try {
         setLoading(true);
-        console.log("Fetching appointment with ID:", appointmentId);
 
-        // Obtener la cita
-        const appointmentResponse = await fetch(
-          `/api/appointments/${appointmentId}`
-        );
-        console.log("Appointment response status:", appointmentResponse.status);
-        console.log("Appointment response URL:", appointmentResponse.url);
+        // 1. Obtener los datos de la cita
+        const appointmentResponse = await fetch(`/api/appointments/${appointmentId}`);
 
         if (!appointmentResponse.ok) {
           const errorText = await appointmentResponse.text();
-          console.log("Appointment error response:", errorText);
           throw new Error(`Error ${appointmentResponse.status}: ${errorText}`);
         }
 
         const appointmentData = await appointmentResponse.json();
-        console.log("Appointment data received:", appointmentData);
         setAppointment(appointmentData);
 
-        // Set materials from appointment data
+        // 2. Cargar materiales desde los datos de la cita
         if (appointmentData.materials) {
           setMaterials(appointmentData.materials);
         }
 
-        //  Obtener el paciente
+        // 3. Cargar las recetas directamente desde los datos de la cita
+        if (appointmentData.prescriptions) {
+          setPrescriptions(appointmentData.prescriptions);
+        } else {
+          setPrescriptions([]);
+        }
+
+        // 4. Obtener los datos del paciente
         if (appointmentData.patientId) {
-          console.log("Fetching patient with ID:", appointmentData.patientId);
           try {
             const patientData = await getPatientById(appointmentData.patientId);
-            console.log("Patient data received:", patientData);
             setPatient(patientData);
 
-            // Obtener los datos del usuario si no están populados
+            // 5. Obtener los datos del usuario
             if (patientData.userId && !isUser(patientData.userId)) {
-              console.log("Fetching user with ID:", patientData.userId);
               const userData = await getUserById(patientData.userId.toString());
-              console.log("User data received:", userData);
               setUser(userData);
             } else if (isUser(patientData.userId)) {
-              console.log("User data already populated:", patientData.userId);
               setUser(patientData.userId);
             }
           } catch (patientError) {
             console.error("Error fetching patient or user data:", patientError);
-            //  Continuar mostrando la cita aunque no se pueda cargar el paciente
           }
         }
       } catch (error) {
-        console.error("Error fetching appointment:", error);
+        console.error("Error fetching appointment data:", error);
+        toast.error('Error al cargar los datos de la cita', {
+          description: 'No se pudo obtener la información de la cita',
+          duration: 4000,
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAppointment();
+    fetchAllData();
   }, [appointmentId]);
-
-  // [New comment] This is the safe way to merge both effects without conflicts:
-  // 1. The first effect runs on 'id' changes for basic data loading
-  // 2. The second effect runs on 'appointmentId' changes with more detailed logging
-  // 3. Both will update the same state, but the second one has better error handling
-  // 4. The loading state is only managed by the second effect (production version)
-
-  // [New comment] To prevent race conditions, consider adding:
-  // And modify the effects to skip duplicate fetches
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -415,6 +760,38 @@ export default function AppointmentDetail() {
       minute: "2-digit",
       hour12: true,
     });
+  };
+
+  // Función para calcular el estado real de la cita
+  const getAppointmentStatus = (appointment: Appointment) => {
+    if (appointment.confirmed) {
+      return {
+        status: 'Confirmada',
+        className: 'bg-green-500/20 text-green-300 border border-green-500/30',
+        icon: <CheckCircle className="w-4 h-4" />,
+        pdfClass: 'status-confirmed'
+      };
+    }
+
+    // Combinar fecha y hora para hacer la comparación completa
+    const appointmentDateTime = new Date(`${appointment.date}T${appointment.time}`);
+    const now = new Date();
+
+    if (appointmentDateTime < now) {
+      return {
+        status: 'Finalizada',
+        className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+        icon: <CheckCircle className="w-4 h-4" />,
+        pdfClass: 'status-finished'
+      };
+    } else {
+      return {
+        status: 'Pendiente',
+        className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+        icon: <AlertCircle className="w-4 h-4" />,
+        pdfClass: 'status-pending'
+      };
+    }
   };
 
   if (loading) {
@@ -471,7 +848,10 @@ export default function AppointmentDetail() {
               <Share2 className="w-4 h-4" />
               Compartir
             </button>
-            <button className="flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all cursor-pointer">
+            <button 
+              onClick={handleDownload}
+              className="flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+            >
               <Download className="w-4 h-4" />
               Descargar
             </button>
@@ -502,19 +882,9 @@ export default function AppointmentDetail() {
             </div>
 
             <div className="text-right">
-              <div
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
-                  appointment.confirmed
-                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                    : "bg-orange-500/20 text-orange-300 border border-orange-500/30"
-                }`}
-              >
-                {appointment.confirmed ? (
-                  <CheckCircle className="w-4 h-4" />
-                ) : (
-                  <AlertCircle className="w-4 h-4" />
-                )}
-                {appointment.confirmed ? "Confirmada" : "Pendiente"}
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${getAppointmentStatus(appointment).className}`}>
+                {getAppointmentStatus(appointment).icon}
+                {getAppointmentStatus(appointment).status}
               </div>
             </div>
           </div>
@@ -621,16 +991,6 @@ export default function AppointmentDetail() {
                 </span>
               </div>
 
-              {/* Nota: Alergias y tipo de sangre son datos que no tenemos aún en el modelo */}
-              <div className="p-4 bg-orange-500/10 rounded-xl border border-orange-500/30">
-                <h4 className="text-orange-300 font-semibold mb-2">
-                  Información Médica
-                </h4>
-                <p className="text-orange-200 text-sm">
-                  Los datos médicos detallados (alergias, tipo de sangre) se
-                  añadirán en futuras actualizaciones del sistema.
-                </p>
-              </div>
             </div>
           </div>
 
@@ -781,7 +1141,9 @@ export default function AppointmentDetail() {
                   <h2 className="text-2xl font-bold text-white mb-1">
                     Recetas Médicas
                   </h2>
-                  <p className="text-blue-300">Medicamentos prescritos</p>
+                  <p className="text-blue-300">
+                    Medicamentos prescritos ({prescriptions.length} recetas)
+                  </p>
                 </div>
               </div>
 
@@ -798,9 +1160,13 @@ export default function AppointmentDetail() {
             {/* Prescriptions List */}
             <div className="space-y-4">
               {prescriptions.length > 0 ? (
-                prescriptions.map((prescription) => (
+                prescriptions
+                  .filter((prescription) => {
+                    return prescription && prescription.medication;
+                  }) // Filtrar elementos válidos
+                  .map((prescription) => (
                   <div
-                    key={prescription._id}
+                    key={prescription._id || Math.random()} // Fallback si no hay _id
                     className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-start gap-4">
@@ -809,7 +1175,7 @@ export default function AppointmentDetail() {
                       </div>
                       <div className="flex-1">
                         <h4 className="text-white font-bold text-lg mb-2">
-                          {prescription.medication}
+                          {prescription.medication || 'Medicamento no especificado'}
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                           <div>
@@ -817,7 +1183,7 @@ export default function AppointmentDetail() {
                               Dosis
                             </span>
                             <span className="text-cyan-300 font-medium">
-                              {prescription.dosage}
+                              {prescription.dosage || 'No especificado'}
                             </span>
                           </div>
                           <div>
@@ -825,7 +1191,7 @@ export default function AppointmentDetail() {
                               Duración
                             </span>
                             <span className="text-green-300 font-medium">
-                              {prescription.duration}
+                              {prescription.duration || 'No especificado'}
                             </span>
                           </div>
                         </div>
@@ -834,7 +1200,7 @@ export default function AppointmentDetail() {
                             Instrucciones:
                           </span>
                           <p className="text-white text-sm">
-                            {prescription.instructions}
+                            {prescription.instructions || 'No especificado'}
                           </p>
                         </div>
                       </div>

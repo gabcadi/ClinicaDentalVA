@@ -23,3 +23,11 @@ export const updateUserRole = async (id: string, role: string) => {
   }
   return res.data;
 }
+
+export const updateUser = async (id: string, data: { fullName?: string; role?: string }) => {
+  const res = await api.put(`/users/${id}`, data);
+  if (res.status !== 200) {
+    throw new Error(`Error updating user with ID ${id}`);
+  }
+  return res.data; // { message, user }
+};

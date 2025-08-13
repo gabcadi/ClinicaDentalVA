@@ -121,16 +121,16 @@ const HomePageContent = () => {
   const DentalParticle = ({ delay = 0 }) => {
     const randomX = Math.random() * 100;
     const randomY = Math.random() * 100;
-    const randomSize = 2 + Math.random() * 4;
+    const randomSize =2 + Math.random() * 4;
     const randomDuration = 6 + Math.random() * 8;
     
     return (
       <div
-        className="absolute rounded-full animate-float-dental opacity-20"
+        className="absolute rounded-full animate-float-dental opacity-30"
         style={{
           width: `${randomSize}px`,
           height: `${randomSize}px`,
-          background: `linear-gradient(45deg, rgb(59, 130, 246, 0.6), rgb(34, 197, 94, 0.4))`,
+          background: `linear-gradient(45deg, rgb(56, 189, 248, 0.4), rgb(59, 130, 246, 0.3))`,
           animationDelay: `${delay}s`,
           animationDuration: `${randomDuration}s`,
           left: `${randomX}%`,
@@ -143,7 +143,7 @@ const HomePageContent = () => {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-blue-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900/40 to-slate-800 relative overflow-hidden">
       {/* Partículas animadas */}
       <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 80 }).map((_, i) => (
@@ -159,22 +159,22 @@ const HomePageContent = () => {
         <section className="relative pt-20 pb-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-4xl mx-auto">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-50 backdrop-blur-sm border border-blue-200 rounded-full px-6 py-3 mb-8 shadow-sm">
-                <Shield className="w-5 h-5 text-blue-600" />
-                <span className="text-blue-700 font-medium">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-sm border border-cyan-500/20 rounded-full px-6 py-3 mb-8">
+                <Shield className="w-5 h-5 text-cyan-400" />
+                <span className="text-cyan-300 font-medium">
                   Clínica Dental Vargas Araya
                 </span>
               </div>
 
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-gray-800 via-blue-900 to-gray-900 bg-clip-text text-transparent mb-8 leading-tight">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent mb-8 leading-tight">
                 Tu sonrisa
                 <br />
-                <span className="text-4xl md:text-6xl lg:text-7xl bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                <span className="text-4xl md:text-6xl lg:text-7xl bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                   perfecta
                 </span>
               </h1>
 
-              <p className="text-xl md:text-2xl text-gray-600 mb-12 leading-relaxed max-w-3xl mx-auto">
+              <p className="text-xl md:text-2xl text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto">
                 Tecnología de vanguardia, atención personalizada y resultados
                 extraordinarios en el corazón de Costa Rica
               </p>
@@ -214,17 +214,17 @@ const HomePageContent = () => {
         </section>
 
         {/* Services Section */}
-        <section className="py-20 relative bg-gradient-to-b from-white to-gray-50">
+        <section className="py-20 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 Servicios de
-                <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                   {" "}
                   Excelencia
                 </span>
               </h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              <p className="text-slate-300 text-lg max-w-2xl mx-auto">
                 Cada tratamiento está diseñado para brindarte la mejor
                 experiencia y resultados excepcionales
               </p>
@@ -238,8 +238,8 @@ const HomePageContent = () => {
                 return (
                   <div
                     key={index}
-                    className={`relative group p-8 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-3xl hover:border-blue-300 transition-all duration-500 hover:scale-105 shadow-lg hover:shadow-xl ${
-                      isActive ? "border-blue-400 bg-blue-50/50" : ""
+                    className={`relative group p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl hover:border-cyan-400/30 transition-all duration-500 hover:scale-105 ${
+                      isActive ? "border-cyan-400/50 bg-white/10" : ""
                     }`}
                   >
                     <div
@@ -247,10 +247,10 @@ const HomePageContent = () => {
                     >
                       <Icon className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                    <h3 className="text-xl font-semibold text-white mb-3">
                       {service.title}
                     </h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-slate-300 leading-relaxed">
                       {service.desc}
                     </p>
                   </div>
@@ -261,30 +261,30 @@ const HomePageContent = () => {
         </section>
 
         {/* Stats Section */}
-        <section className="py-20 bg-gradient-to-r from-blue-50 to-cyan-50 backdrop-blur-sm border-t border-blue-100">
+        <section className="py-20 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-3 gap-8 text-center">
               <div className="group">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
                   +1,200
                 </div>
-                <div className="text-gray-600 text-lg">
+                <div className="text-slate-300 text-lg">
                   Pacientes satisfechos
                 </div>
               </div>
               <div className="group">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
                   15+
                 </div>
-                <div className="text-gray-600 text-lg">
+                <div className="text-slate-300 text-lg">
                   Años de experiencia
                 </div>
               </div>
               <div className="group">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
                   98%
                 </div>
-                <div className="text-gray-600 text-lg">
+                <div className="text-slate-300 text-lg">
                   Satisfacción garantizada
                 </div>
               </div>
@@ -329,10 +329,10 @@ const HomePageContent = () => {
 // Loading component for Suspense fallback
 function LoadingHomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-blue-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900/40 to-slate-800 flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Cargando...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+        <p className="text-slate-300">Cargando...</p>
       </div>
     </div>
   );

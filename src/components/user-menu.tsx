@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Loader, Menu, X } from "lucide-react";
+import { Loader } from "lucide-react";
 import { ToothIcon } from "@/components/ui/tooth-icon";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -20,10 +20,12 @@ const UserButton = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   // Cast seguro para acceder al rol extendido en la sesión (evita error TS si la augment no es recogida)
-  const role = (session?.user as any)?.role as 'admin' | 'user' | 'doctor' | undefined;
-
+  // Solo evaluar el role si la sesión está completamente cargada
+  const role = (status === 'authenticated' && session?.user) 
+    ? (session.user as any)?.role as 'admin' | 'user' | 'doctor' | undefined 
+    : undefined;
   // Handle scroll for transparent/solid header transition
   useEffect(() => {
     const handleScroll = () => {
@@ -53,10 +55,6 @@ const UserButton = () => {
   const handleSignOut = async () => {
     await signOut({ redirect: false });
     router.push("/");
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   return (
@@ -143,7 +141,7 @@ const UserButton = () => {
                     </DropdownMenuItem>
                   </Link>
 
-                  {role === "admin" && (
+                  {status === 'authenticated' && role === "admin" && (
                     <>
                       <DropdownMenuItem
                         className="h-10 text-cyan-700 dark:text-cyan-300 font-medium cursor-pointer rounded-md hover:bg-cyan-100/70 dark:hover:bg-cyan-500/10 focus:bg-cyan-100 dark:focus:bg-cyan-500/10 focus-visible:outline-none transition-colors"
@@ -160,7 +158,7 @@ const UserButton = () => {
                     </>
                   )}
 
-                  {role === "doctor" && (
+                  {status === 'authenticated' && role === "doctor" && (
                     <>
                       <DropdownMenuItem
                         className="h-10 text-cyan-700 dark:text-cyan-300 font-medium cursor-pointer rounded-md hover:bg-cyan-100/70 dark:hover:bg-cyan-500/10 focus:bg-cyan-100 dark:focus:bg-cyan-500/10 focus-visible:outline-none transition-colors"
@@ -208,71 +206,9 @@ const UserButton = () => {
                 </Button>
               </div>
             )}
-            
-            {/* Mobile Menu Button */}
-            <button 
-              className={`md:hidden inline-flex items-center justify-center rounded-md h-10 w-10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70
-                ${isScrolled ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-slate-800/60 text-slate-200'}
-              `}
-              onClick={toggleMobileMenu}
-            >
-              {isMobileMenuOpen ? 
-                <X className={`h-6 w-6 ${isScrolled ? 'text-slate-700' : 'text-slate-200'}`} /> : 
-                <Menu className={`h-6 w-6 ${isScrolled ? 'text-slate-700' : 'text-slate-200'}`} />
-              }
-            </button>
           </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-  <div className={`md:hidden ${isScrolled ? 'bg-white/95 backdrop-blur-md border-b border-slate-200/70' : 'bg-slate-900/90 backdrop-blur-md border-b border-white/10'} py-4 px-4 animate-slideDown mt-16` }>
-          <nav className="flex flex-col space-y-1">
-            <Link 
-              href="/" 
-              className={`font-medium ${isScrolled ? 'text-slate-700 hover:text-cyan-600 hover:bg-slate-100' : 'text-slate-200 hover:text-cyan-300 hover:bg-slate-800/60'} transition-colors py-2 px-4 rounded-lg`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Inicio
-            </Link>
-            <Link 
-              href="/services" 
-              className={`font-medium ${isScrolled ? 'text-slate-700 hover:text-cyan-600 hover:bg-slate-100' : 'text-slate-200 hover:text-cyan-300 hover:bg-slate-800/60'} transition-colors py-2 px-4 rounded-lg`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Servicios
-            </Link>
-            <Link 
-              href="/about" 
-              className={`font-medium ${isScrolled ? 'text-slate-700 hover:text-cyan-600 hover:bg-slate-100' : 'text-slate-200 hover:text-cyan-300 hover:bg-slate-800/60'} transition-colors py-2 px-4 rounded-lg`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Acerca de
-            </Link>
-            <Link 
-              href="/contact" 
-              className={`font-medium ${isScrolled ? 'text-slate-700 hover:text-cyan-600 hover:bg-slate-100' : 'text-slate-200 hover:text-cyan-300 hover:bg-slate-800/60'} transition-colors py-2 px-4 rounded-lg`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Contacto
-            </Link>
-            {session && (
-              <Link 
-                href="/profile" 
-                className={`font-medium ${isScrolled ? 'text-slate-700 hover:text-cyan-600 hover:bg-slate-100' : 'text-slate-200 hover:text-cyan-300 hover:bg-slate-800/60'} transition-colors py-2 px-4 rounded-lg`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Mi Perfil
-              </Link>
-            )}
-          </nav>
-        </div>
-      )}
-      <style jsx>{`
-        @keyframes slideDown { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0);} }
-        .animate-slideDown { animation: slideDown .45s cubic-bezier(.4,0,.2,1); }
-      `}</style>
     </header>
 
   );

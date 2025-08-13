@@ -195,13 +195,6 @@ const HomePageContent = () => {
                     </Button>
                   </Link>
                 )}
-
-                <Button
-                  variant="outline"
-                  className="h-14 px-8 border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/10 hover:border-cyan-400/50 rounded-full transition-all duration-300"
-                >
-                  Ver servicios
-                </Button>
               </div>
 
               

@@ -19,9 +19,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           },
         }}
       />
-      <div className="flex flex-col min-h-screen overflow-x-hidden">
+      <div className="flex flex-col min-h-screen overflow-x-hidden w-full">
         <UserButton />
-        <main className="flex-grow pt-16">
+        <main className="flex-grow pt-16 w-full min-w-0">
           {children}
         </main>
         <Footer />

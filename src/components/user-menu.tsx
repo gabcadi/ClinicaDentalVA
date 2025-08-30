@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Loader } from "lucide-react";
+import { Loader, Menu, X } from "lucide-react";
 import { ToothIcon } from "@/components/ui/tooth-icon";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -20,6 +20,7 @@ const UserButton = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Cast seguro para acceder al rol extendido en la sesión (evita error TS si la augment no es recogida)
   // Solo evaluar el role si la sesión está completamente cargada
@@ -36,8 +37,19 @@ const UserButton = () => {
       }
     };
     
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleResize);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (status === "loading") {
@@ -98,6 +110,24 @@ const UserButton = () => {
               </Link>
             ))}
           </nav>
+
+          {/* Mobile Navigation Button */}
+          <div className="flex md:hidden items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`p-2 rounded-lg transition-colors ${
+                isScrolled ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-200 hover:bg-white/10'
+              }`}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
+          </div>
 
           {/* User Menu or Login/Register Buttons */}
           <div className="flex items-center gap-4 shrink-0">
@@ -209,6 +239,66 @@ const UserButton = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className={`md:hidden absolute top-16 left-0 right-0 z-40 transition-all duration-300 ease-in-out ${
+          isScrolled ? 'bg-white/95' : 'bg-slate-900/95'
+        } backdrop-blur-xl border-b border-slate-200/70 dark:border-white/10`}>
+          <div className="container mx-auto px-4 py-6">
+            <nav className="flex flex-col space-y-4">
+              {[
+                { href: '/', label: 'Inicio' },
+                { href: '/services', label: 'Servicios' },
+                { href: '/about', label: 'Acerca de' },
+              ].map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`font-medium text-base py-2 px-4 rounded-lg transition-colors ${
+                    isScrolled 
+                      ? 'text-slate-700 hover:text-cyan-600 hover:bg-cyan-50' 
+                      : 'text-slate-200 hover:text-cyan-300 hover:bg-white/10'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              
+              {!session && (
+                <div className="flex flex-col space-y-3 pt-4 border-t border-slate-200/50 dark:border-white/10">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className={`w-full ${
+                      isScrolled 
+                        ? 'border-cyan-600 text-cyan-600 hover:bg-cyan-50' 
+                        : 'border-cyan-400 text-cyan-300 hover:bg-cyan-500/10'
+                    }`}
+                  >
+                    <Link href="/sign-in" onClick={() => setIsMobileMenuOpen(false)}>
+                      Iniciar sesión
+                    </Link>
+                  </Button>
+                  <Button 
+                    asChild 
+                    className={`w-full ${
+                      isScrolled 
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600' 
+                        : 'bg-gradient-to-r from-cyan-400 to-blue-500'
+                    }`}
+                  >
+                    <Link href="/sign-up" onClick={() => setIsMobileMenuOpen(false)}>
+                      Registrarse
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </nav>
+          </div>
+        </div>
+      )}
     </header>
 
   );

@@ -166,20 +166,20 @@ const HomePageContent = () => {
                 </span>
               </div>
 
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent mb-8 leading-tight">
+              <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent mb-6 md:mb-8 leading-tight">
                 Tu sonrisa
                 <br />
-                <span className="text-4xl md:text-6xl lg:text-7xl bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                <span className="text-3xl md:text-5xl lg:text-7xl bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                   perfecta
                 </span>
               </h1>
 
-              <p className="text-xl md:text-2xl text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto">
+              <p className="text-lg md:text-xl lg:text-2xl text-slate-300 mb-8 md:mb-12 leading-relaxed max-w-3xl mx-auto px-4 md:px-0">
                 Tecnología de vanguardia, atención personalizada y resultados
                 extraordinarios en el corazón de Costa Rica
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 md:px-0">
                 {loading ? (
                   <Button disabled className="h-14 px-8 bg-gradient-to-r from-cyan-500/50 to-blue-600/50 text-white font-semibold rounded-full">
                     <span>Cargando...</span>
@@ -230,7 +230,7 @@ const HomePageContent = () => {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-0">
               {services.map((service, index) => {
                 const Icon = service.icon;
                 const isActive = index === currentService;
@@ -263,7 +263,7 @@ const HomePageContent = () => {
         {/* Stats Section */}
         <section className="py-20 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-3 gap-8 text-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center px-4 md:px-0">
               <div className="group">
                 <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
                   +1,200

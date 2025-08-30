@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   title: "Clínica Dental Vargas Araya",
   description: "Tecnología de vanguardia, atención personalizada y resultados extraordinarios en el corazón de Costa Rica.",
   keywords: ["clínica dental", "dentista", "ortodoncia", "blanqueamiento", "implantes", "Costa Rica"],
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full m-0 p-0`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full m-0 p-0 overflow-x-hidden`}>
         <ClientLayout>
           {children}
         </ClientLayout>

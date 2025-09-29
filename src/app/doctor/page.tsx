@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, FileText, ClipboardList, Search, ImageIcon, FilePlus2, Users } from 'lucide-react';
 import Link from 'next/link';
+import { DoctorGuard } from '@/components/DoctorGuard';
 
 const features = [
   {
@@ -30,7 +31,8 @@ const features = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-100 px-6 py-12">
+    <DoctorGuard>
+      <div className="min-h-screen bg-gradient-to-b from-white to-slate-100 px-6 py-12">
       <div className="max-w-7xl mx-auto">
         <header className="mb-16 text-center">
           <h1 className="text-4xl font-bold text-sky-700">¡Hola Doc! - Bienvenido al Panel Médico</h1>
@@ -85,6 +87,7 @@ export default function HomePage() {
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </DoctorGuard>
   );
 }

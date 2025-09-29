@@ -9,6 +9,7 @@ import { getUsers } from '@/lib/api/users';
 import { Patient, User } from '@/lib/types/interfaces';
 import { toast } from 'sonner';
 import { TableSkeleton } from '@/components/ui/loading-skeletons';
+import { DoctorGuard } from '@/components/DoctorGuard';
 
 // Type guard para verificar si userId es un objeto User
 const isUser = (userId: unknown): userId is User => {
@@ -69,7 +70,8 @@ export default function PacientesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
+    <DoctorGuard>
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-10">
           <h1 className="text-4xl font-bold text-sky-700">Gestión de Pacientes</h1>
@@ -180,6 +182,7 @@ export default function PacientesPage() {
         </div>
         )}
       </div>
-    </div>
+      </div>
+    </DoctorGuard>
   );
 }

@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { PatientPageSkeleton, InlineTextSkeleton } from '@/components/ui/loading-skeletons';
 import UploadImageModal from '@/components/ui/upload-image-modal';
 import { toast } from 'sonner';
+import { DoctorGuard } from '@/components/DoctorGuard';
 
 // Type guard para verificar si userId es un objeto User
 const isUser = (userId: unknown): userId is User => {
@@ -163,7 +164,8 @@ if (loadingPatient) {
 }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12 font-[var(--font-dmsans)]">
+    <DoctorGuard>
+      <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12 font-[var(--font-dmsans)]">
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-sky-700 tracking-tight">Paciente</h1>
@@ -324,7 +326,8 @@ if (loadingPatient) {
         onUpload={handleUploadImage}
         isUploading={isUploading}
       />
-    </div>
+      </div>
+    </DoctorGuard>
   );
 }
 

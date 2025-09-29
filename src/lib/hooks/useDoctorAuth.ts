@@ -14,20 +14,26 @@ export function useDoctorAuth() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('useDoctorAuth - Status:', status);
+    console.log('useDoctorAuth - Session:', session);
+    console.log('useDoctorAuth - User Role:', (session?.user as any)?.role);
+    
     if (status === 'loading') return;
 
     if (!session) {
-      // No session, redirect to sign-in
+      console.log('useDoctorAuth - No session, redirecting to sign-in');
       router.push('/sign-in');
       return;
     }
 
     const userRole = (session.user as any)?.role;
     if (userRole !== 'doctor') {
-      // User doesn't have doctor role, redirect to home
+      console.log('useDoctorAuth - User is not doctor, role:', userRole, 'redirecting to home');
       router.push('/home');
       return;
     }
+    
+    console.log('useDoctorAuth - User is doctor, access granted');
   }, [session, status, router]);
 
   return {

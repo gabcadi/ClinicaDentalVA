@@ -10,8 +10,10 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 export default function UserDetalle() {
+  const { data: session, status } = useSession();
   const { id } = useParams() as { id: string };
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -19,6 +21,19 @@ export default function UserDetalle() {
   const [formData, setFormData] = useState({ fullName: '', email: '' });
 
   useEffect(() => {
+    if (status === 'loading') return;
+
+    if (!session) {
+      router.push('/sign-in');
+      return;
+    }
+
+    const userRole = (session.user as any)?.role;
+    if (userRole !== 'admin') {
+      router.push('/home');
+      return;
+    }
+
     const fetchUser = async () => {
       try {
         const data = await getUserById(id);
@@ -33,7 +48,7 @@ export default function UserDetalle() {
     if (id) {
       fetchUser();
     }
-  }, [id]);
+  }, [id, session, status, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,6 +67,47 @@ export default function UserDetalle() {
       toast.error('Error al actualizar el usuario.');
     }
   };
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-50">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
+            <p className="text-slate-600">Verificando permisos...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized state if not authenticated or not admin
+  if (!session || (session.user as any)?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-50">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center max-w-md mx-auto px-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-6">
+              <Icons.AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-4">
+              Acceso Denegado
+            </h1>
+            <p className="text-slate-600 mb-6">
+              No tienes permisos para acceder a esta página. Solo los administradores pueden ver detalles de usuarios.
+            </p>
+            <Button 
+              onClick={() => router.push('/home')}
+              className="bg-slate-900 hover:bg-slate-800 text-white"
+            >
+              Volver al Inicio
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-50 px-6 py-12 font-[var(--font-dmsans)]">
@@ -110,14 +166,4 @@ export default function UserDetalle() {
   );
 }
 
-function CardItem({ icon, title, description }: { icon: React.ReactElement; title: string; description: string }) {
-  return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
-      <div className="flex items-center gap-3 mb-3 text-sky-600">
-        {icon}
-        <h3 className="text-lg font-semibold">{title}</h3>
-      </div>
-      <p className="text-slate-600 text-sm">{description}</p>
-    </div>
-  );
-}
+

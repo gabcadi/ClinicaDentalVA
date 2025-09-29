@@ -63,6 +63,7 @@ const authOptions = {
 		async session({ session, token }: { session: any; token: any }) {
 			if (token) {
 				session.user = {
+					id: token.id,
 					email: token.email,
 					name: token.name,
 					role: token.role,

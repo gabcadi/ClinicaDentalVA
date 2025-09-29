@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { AppointmentGuard } from "@/components/AppointmentGuard";
 import {
   Calendar,
   Clock,
@@ -443,7 +444,8 @@ export default function AppointmentDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+    <AppointmentGuard appointmentId={appointmentId}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
       {/* Efectos de fondo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
@@ -1023,6 +1025,7 @@ export default function AppointmentDetail() {
         materialName={materialToDelete?.name || ''}
         isDeleting={isDeletingMaterial}
       />
-    </div>
+      </div>
+    </AppointmentGuard>
   );
 }

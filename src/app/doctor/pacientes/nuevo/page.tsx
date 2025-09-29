@@ -8,6 +8,7 @@ import { getUsers } from '@/lib/api/users';
 import { User } from '@/lib/types/interfaces';
 import { toast } from 'sonner';
 import { Search, Check, ChevronDown, UserIcon } from 'lucide-react';
+import { DoctorGuard } from '@/components/DoctorGuard';
 
 export default function NuevoPacientePage() {
   const router = useRouter();
@@ -114,7 +115,8 @@ export default function NuevoPacientePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
+    <DoctorGuard>
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-sky-700 mb-8">Nuevo Paciente</h1>
         
@@ -287,6 +289,7 @@ export default function NuevoPacientePage() {
           </form>
         </div>
       </div>
-    </div>
+      </div>
+    </DoctorGuard>
   );
 }

@@ -21,6 +21,7 @@ import { getUserById } from '@/lib/api/users';
 import { Patient, User } from '@/lib/types/interfaces';
 import { MedicalImage } from '@/app/models/patients';
 import { InlineTextSkeleton } from '@/components/ui/loading-skeletons';
+import { DoctorGuard } from '@/components/DoctorGuard';
 
 // Type guard para verificar si userId es un objeto User
 const isUser = (userId: unknown): userId is User => {
@@ -160,7 +161,8 @@ export default function PatientImagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12">
+    <DoctorGuard>
+      <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -391,6 +393,7 @@ export default function PatientImagesPage() {
           </Dialog>
         )}
       </div>
-    </div>
+      </div>
+    </DoctorGuard>
   );
 }

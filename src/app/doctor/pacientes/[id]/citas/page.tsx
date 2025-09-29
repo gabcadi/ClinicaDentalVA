@@ -17,6 +17,7 @@ import { getPatientById } from '@/lib/api/patients';
 import { Patient, User as UserType } from '@/lib/types/interfaces';
 import { TableSkeleton, InlineTextSkeleton } from '@/components/ui/loading-skeletons';
 import { toast } from 'sonner';
+import { DoctorGuard } from '@/components/DoctorGuard';
 
 // Type guard para verificar si userId es un objeto User
 const isUser = (userId: unknown): userId is UserType => {
@@ -119,7 +120,8 @@ export default function PatientAppointments() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12 font-[var(--font-dmsans)]">
+    <DoctorGuard>
+      <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-white px-6 py-12 font-[var(--font-dmsans)]">
       <div className="max-w-6xl mx-auto">
         {/* Header con información del paciente */}
         <div className="flex items-center gap-4 mb-8">
@@ -263,6 +265,7 @@ export default function PatientAppointments() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </DoctorGuard>
   );
 }

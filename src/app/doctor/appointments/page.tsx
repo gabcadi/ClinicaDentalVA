@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
+import { DoctorGuard } from '@/components/DoctorGuard';
 
 interface Appointment {
 	_id: string;
@@ -96,8 +97,9 @@ export default function ManageAppointments() {
 	};
 
 	return (
-		<div className="max-w-6xl mx-auto py-10">
-			<Toaster position="top-center" />
+		<DoctorGuard>
+			<div className="max-w-6xl mx-auto py-10">
+				<Toaster position="top-center" />
 			<h2 className="mb-8 text-3xl font-bold text-center">Gestión de Citas</h2>
 			<div className="overflow-x-auto rounded-lg shadow bg-white">
 				<table className="min-w-full divide-y divide-gray-200">
@@ -211,6 +213,7 @@ export default function ManageAppointments() {
 					</tbody>
 				</table>
 			</div>
-		</div>
+			</div>
+		</DoctorGuard>
 	);
 }

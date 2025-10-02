@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "../../utils/mongodb";
-import Appointment, { IMaterial, IAppointment } from "../../models/appointments";
+import Appointment from "../../models/appointments";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 
@@ -55,36 +55,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar todas las citas que tengan materiales
-    let appointmentsWithMaterials: IAppointment[];
+    let appointmentsWithMaterials;
     try {
-      console.log("Querying appointments with materials...");
-      
-      // First, let's get all appointments to debug
-      const allAppointments = await Appointment.find({}).select("description materials");
-      console.log(`Total appointments in DB: ${allAppointments.length}`);
-      
-      // Filter appointments that have materials
       appointmentsWithMaterials = await Appointment.find({
-        $and: [
-          { materials: { $exists: true } },
-          { materials: { $ne: [] } },
-          { "materials.0": { $exists: true } }
-        ]
+        materials: { $exists: true, $ne: [] },
       })
         .populate("patientId", "nombre email telefono")
         .select(
-          "description date time materials patientId confirmed doctorReport totalPrice"
+          "description date time materials patientId confirmed doctorReport"
         )
-        .sort({ date: -1 })
-        .lean(); // Use lean() for better performance
+        .sort({ date: -1 });
       
       console.log(`Found ${appointmentsWithMaterials.length} appointments with materials`);
-      
-      // Log the first appointment for debugging
-      if (appointmentsWithMaterials.length > 0) {
-        console.log("First appointment with materials:", JSON.stringify(appointmentsWithMaterials[0], null, 2));
-      }
-      
     } catch (queryError) {
       console.error("Database query error:", queryError);
       return NextResponse.json({ error: "Error al consultar la base de datos" }, { status: 500 });
@@ -94,9 +76,9 @@ export async function GET(request: NextRequest) {
     const materialsData: any[] = [];
     const materialsSummary = new Map<string, any>();
 
-    appointmentsWithMaterials.forEach((appointment: any) => {
+    appointmentsWithMaterials.forEach((appointment) => {
       if (appointment.materials && appointment.materials.length > 0) {
-        appointment.materials.forEach((material: any) => {
+        appointment.materials.forEach((material) => {
           // Agregar cada material individual con información de la cita
           materialsData.push({
             materialId: material._id,

@@ -63,7 +63,11 @@ export default function MaterialesPage() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [viewMode, setViewMode] = useState<'detailed' | 'summary'>('detailed');
+  const [viewMode, setViewMode] = useState<'detailed' | 'summary'>('summary');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [sortBy, setSortBy] = useState<'name' | 'quantity' | 'date'>('quantity');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -85,16 +89,30 @@ export default function MaterialesPage() {
   const fetchMaterials = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/materials');
+      setError('');
+      
+      const response = await fetch('/api/materials', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error al cargar materiales');
+        if (response.status === 401) {
+          router.push('/sign-in');
+          return;
+        }
+        throw new Error(data.error || `Error ${response.status}: Error al cargar materiales`);
       }
 
       setMaterialsData(data);
+      setCurrentPage(1); // Reset to first page when data loads
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar materiales');
+      console.error('Error fetching materials:', err);
+      setError(err instanceof Error ? err.message : 'Error de conexión al cargar materiales');
     } finally {
       setLoading(false);
     }
@@ -111,14 +129,44 @@ export default function MaterialesPage() {
     return matchesSearch && matchesType;
   }) || [];
 
-  const filteredSummary = materialsData?.summary.filter(item => {
+  const sortedFilteredSummary = materialsData?.summary.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.type.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = filterType === '' || item.type === filterType;
     
     return matchesSearch && matchesType;
+  }).sort((a, b) => {
+    let compareValue = 0;
+    
+    switch (sortBy) {
+      case 'name':
+        compareValue = a.name.localeCompare(b.name);
+        break;
+      case 'quantity':
+        compareValue = a.totalQuantity - b.totalQuantity;
+        break;
+      case 'date':
+        compareValue = new Date(a.lastUsed).getTime() - new Date(b.lastUsed).getTime();
+        break;
+      default:
+        compareValue = a.totalQuantity - b.totalQuantity;
+    }
+    
+    return sortOrder === 'asc' ? compareValue : -compareValue;
   }) || [];
+
+  // Pagination for summary view
+  const totalPages = Math.ceil(sortedFilteredSummary.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedSummary = sortedFilteredSummary.slice(startIndex, endIndex);
+
+  // Pagination for detailed view
+  const totalDetailedPages = Math.ceil(filteredMaterials.length / itemsPerPage);
+  const detailedStartIndex = (currentPage - 1) * itemsPerPage;
+  const detailedEndIndex = detailedStartIndex + itemsPerPage;
+  const paginatedMaterials = filteredMaterials.slice(detailedStartIndex, detailedEndIndex);
 
   const uniqueTypes = Array.from(new Set(materialsData?.materials.map(m => m.materialType) || []));
 
@@ -131,11 +179,34 @@ export default function MaterialesPage() {
     });
   };
 
+  const getLowStockItems = () => {
+    if (!materialsData) return [];
+    // Consider items with total quantity <= 5 as low stock
+    return materialsData.summary.filter(item => item.totalQuantity <= 5);
+  };
+
+  const getMostUsedMaterial = () => {
+    if (!materialsData || materialsData.summary.length === 0) return null;
+    return materialsData.summary.reduce((prev, current) => 
+      prev.usageCount > current.usageCount ? prev : current
+    );
+  };
+
+  const getRecentActivity = () => {
+    if (!materialsData) return [];
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    return materialsData.materials.filter(material => 
+      new Date(material.createdAt) >= thirtyDaysAgo
+    ).length;
+  };
+
   const exportToCSV = () => {
     if (!materialsData) return;
 
     const csvData = viewMode === 'detailed' ? 
-      filteredMaterials.map(material => ({
+      filteredMaterials.map((material: MaterialData) => ({
         'Material': material.materialName,
         'Tipo': material.materialType,
         'Cantidad': material.quantity,
@@ -145,7 +216,7 @@ export default function MaterialesPage() {
         'Paciente': material.patient?.nombre || 'N/A',
         'Estado': material.confirmed ? 'Confirmada' : 'Pendiente'
       })) :
-      filteredSummary.map(item => ({
+      sortedFilteredSummary.map((item: MaterialSummary) => ({
         'Material': item.name,
         'Tipo': item.type,
         'Cantidad Total': item.totalQuantity,
@@ -276,10 +347,11 @@ export default function MaterialesPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-slate-600 text-sm">Citas con Materiales</p>
-                      <p className="text-2xl font-bold">{materialsData.totalAppointments}</p>
+                      <p className="text-slate-600 text-sm">Stock Bajo</p>
+                      <p className="text-2xl font-bold text-orange-600">{getLowStockItems().length}</p>
+                      <p className="text-xs text-slate-500">≤ 5 unidades</p>
                     </div>
-                    <Activity className="w-8 h-8 text-slate-600" />
+                    <Activity className="w-8 h-8 text-orange-600" />
                   </div>
                 </CardContent>
               </Card>
@@ -288,15 +360,11 @@ export default function MaterialesPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-slate-600 text-sm">Promedio por Cita</p>
-                      <p className="text-2xl font-bold">
-                        {materialsData.totalAppointments > 0 
-                          ? (materialsData.totalMaterials / materialsData.totalAppointments).toFixed(1)
-                          : '0'
-                        }
-                      </p>
+                      <p className="text-slate-600 text-sm">Actividad Reciente</p>
+                      <p className="text-2xl font-bold text-green-600">{getRecentActivity()}</p>
+                      <p className="text-xs text-slate-500">últimos 30 días</p>
                     </div>
-                    <TrendingUp className="w-8 h-8 text-slate-600" />
+                    <TrendingUp className="w-8 h-8 text-green-600" />
                   </div>
                 </CardContent>
               </Card>
@@ -306,40 +374,84 @@ export default function MaterialesPage() {
           {/* Filters */}
           <Card className="mb-8">
             <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                    <Input
-                      placeholder="Buscar por material, tipo, descripción o paciente..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      <Input
+                        placeholder="Buscar por material, tipo, descripción o paciente..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
-                </div>
-                
-                <div className="w-full md:w-48">
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                  
+                  <div className="w-full md:w-48">
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    >
+                      <option value="">Todos los tipos</option>
+                      {uniqueTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <Button
+                    onClick={exportToCSV}
+                    variant="outline"
+                    className="flex items-center gap-2"
                   >
-                    <option value="">Todos los tipos</option>
-                    {uniqueTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
+                    <FileDown className="w-4 h-4" />
+                    Exportar CSV
+                  </Button>
                 </div>
                 
-                <Button
-                  onClick={exportToCSV}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <FileDown className="w-4 h-4" />
-                  Exportar CSV
-                </Button>
+                {/* Sorting and pagination controls for summary view */}
+                {viewMode === 'summary' && (
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t">
+                    <div className="flex gap-2">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as 'name' | 'quantity' | 'date')}
+                        className="px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                      >
+                        <option value="quantity">Ordenar por Cantidad</option>
+                        <option value="name">Ordenar por Nombre</option>
+                        <option value="date">Ordenar por Fecha</option>
+                      </select>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                        className="px-3"
+                      >
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </Button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-sm text-slate-600">Mostrar:</span>
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                      >
+                        <option value={5}>5 por página</option>
+                        <option value={10}>10 por página</option>
+                        <option value={25}>25 por página</option>
+                        <option value={50}>50 por página</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -359,107 +471,196 @@ export default function MaterialesPage() {
                     No se encontraron materiales con los filtros aplicados
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {filteredMaterials.map((material, index) => (
-                      <div key={`${material.appointmentId}-${material.materialId}-${index}`} 
-                           className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="font-medium text-slate-900">{material.materialName}</h3>
-                              <Badge variant="outline">{material.materialType}</Badge>
-                              <span className="text-sm text-slate-600">
-                                Cantidad: {material.quantity}
-                              </span>
+                  <>
+                    <div className="space-y-4 mb-6">
+                      {paginatedMaterials.map((material: MaterialData, index: number) => (
+                        <div key={`${material.appointmentId}-${material.materialId}-${index}`} 
+                             className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="font-medium text-slate-900">{material.materialName}</h3>
+                                <Badge variant="outline">{material.materialType}</Badge>
+                                <span className="text-sm text-slate-600">
+                                  Cantidad: {material.quantity}
+                                </span>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-slate-600">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-4 h-4" />
+                                  <span>{material.patient?.nombre || 'Paciente no disponible'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4" />
+                                  <span>{material.appointmentDate} - {material.appointmentTime}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Package className="w-4 h-4" />
+                                  <span>Usado el {formatDate(material.createdAt)}</span>
+                                </div>
+                              </div>
+                              
+                              <p className="text-sm text-slate-600 mt-2">
+                                <strong>Cita:</strong> {material.appointmentDescription}
+                              </p>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-slate-600">
-                              <div className="flex items-center gap-2">
-                                <User className="w-4 h-4" />
-                                <span>{material.patient?.nombre || 'Paciente no disponible'}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                <span>{material.appointmentDate} - {material.appointmentTime}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Package className="w-4 h-4" />
-                                <span>Usado el {formatDate(material.createdAt)}</span>
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={material.confirmed ? "default" : "secondary"}>
+                                {material.confirmed ? 'Confirmada' : 'Pendiente'}
+                              </Badge>
+                              <Link href={`/appointments/${material.appointmentId}`}>
+                                <Button variant="outline" size="sm">
+                                  Ver Cita
+                                </Button>
+                              </Link>
                             </div>
-                            
-                            <p className="text-sm text-slate-600 mt-2">
-                              <strong>Cita:</strong> {material.appointmentDescription}
-                            </p>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Badge variant={material.confirmed ? "default" : "secondary"}>
-                              {material.confirmed ? 'Confirmada' : 'Pendiente'}
-                            </Badge>
-                            <Link href={`/appointments/${material.appointmentId}`}>
-                              <Button variant="outline" size="sm">
-                                Ver Cita
-                              </Button>
-                            </Link>
                           </div>
                         </div>
+                      ))}
+                    </div>
+                    
+                    {/* Pagination */}
+                    {totalDetailedPages > 1 && (
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <div className="text-sm text-slate-600">
+                          Mostrando {detailedStartIndex + 1} - {Math.min(detailedEndIndex, filteredMaterials.length)} de {filteredMaterials.length} materiales
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            Anterior
+                          </Button>
+                          
+                          <span className="text-sm text-slate-600">
+                            Página {currentPage} de {totalDetailedPages}
+                          </span>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(Math.min(totalDetailedPages, currentPage + 1))}
+                            disabled={currentPage === totalDetailedPages}
+                          >
+                            Siguiente
+                          </Button>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Resumen por Material ({filteredSummary.length} tipos)
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Inventario de Materiales ({sortedFilteredSummary.length} tipos)
+                  </div>
+                  {getLowStockItems().length > 0 && (
+                    <Badge variant="outline" className="text-orange-600 border-orange-200">
+                      {getLowStockItems().length} con stock bajo
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {filteredSummary.length === 0 ? (
+                {sortedFilteredSummary.length === 0 ? (
                   <div className="text-center py-8 text-slate-600">
                     No se encontraron materiales con los filtros aplicados
                   </div>
                 ) : (
-                  <div className="grid gap-4">
-                    {filteredSummary.map((item, index) => (
-                      <div key={`${item.name}-${item.type}-${index}`} 
-                           className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="font-medium text-slate-900">{item.name}</h3>
-                              <Badge variant="outline">{item.type}</Badge>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-slate-600">
-                              <div>
-                                <span className="font-medium">Cantidad Total:</span> {item.totalQuantity}
+                  <>
+                    <div className="grid gap-4 mb-6">
+                      {paginatedSummary.map((item: MaterialSummary, index: number) => {
+                        const isLowStock = item.totalQuantity <= 5;
+                        return (
+                          <div key={`${item.name}-${item.type}-${index}`} 
+                               className={`border rounded-lg p-4 hover:bg-slate-50 transition-colors ${
+                                 isLowStock ? 'border-orange-200 bg-orange-50' : ''
+                               }`}>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-medium text-slate-900">{item.name}</h3>
+                                  <Badge variant="outline">{item.type}</Badge>
+                                  {isLowStock && (
+                                    <Badge variant="outline" className="text-orange-600 border-orange-200">
+                                      Stock Bajo
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-slate-600">
+                                  <div>
+                                    <span className="font-medium">Cantidad Total:</span> {item.totalQuantity}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Veces Usado:</span> {item.usageCount}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Último Uso:</span> {formatDate(item.lastUsed)}
+                                  </div>
+                                </div>
                               </div>
-                              <div>
-                                <span className="font-medium">Veces Usado:</span> {item.usageCount}
-                              </div>
-                              <div>
-                                <span className="font-medium">Último Uso:</span> {formatDate(item.lastUsed)}
+                              
+                              <div className="text-right">
+                                <div className={`text-2xl font-bold ${
+                                  isLowStock ? 'text-orange-600' : 'text-slate-900'
+                                }`}>
+                                  {item.totalQuantity}
+                                </div>
+                                <div className="text-sm text-slate-600">
+                                  unidades totales
+                                </div>
                               </div>
                             </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <div className="text-sm text-slate-600">
+                          Mostrando {startIndex + 1} - {Math.min(endIndex, sortedFilteredSummary.length)} de {sortedFilteredSummary.length} materiales
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            Anterior
+                          </Button>
                           
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-slate-900">
-                              {item.totalQuantity}
-                            </div>
-                            <div className="text-sm text-slate-600">
-                              unidades totales
-                            </div>
-                          </div>
+                          <span className="text-sm text-slate-600">
+                            Página {currentPage} de {totalPages}
+                          </span>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            Siguiente
+                          </Button>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>

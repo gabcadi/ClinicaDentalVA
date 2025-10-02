@@ -1,54 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "../../utils/mongodb";
-import Appointment, { IMaterial, IAppointment } from "../../models/appointments";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
+import connectDB from "../../../utils/mongodb";
+import Appointment, { IMaterial, IAppointment } from "../../../models/appointments";
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("Starting materials API request");
+    console.log("No-auth materials API - Starting request");
     
-    // Simple test - return early to check if basic API works
-    // Uncomment next line for debugging
-    // return NextResponse.json({ message: "API is working", timestamp: new Date().toISOString() });
-    
-    // Check environment variables
-    if (!process.env.NEXTAUTH_SECRET) {
-      console.error("NEXTAUTH_SECRET is not set");
-      return NextResponse.json({ error: "Configuración de autenticación faltante" }, { status: 500 });
-    }
-    
-    if (!process.env.MONGODB_URI) {
-      console.error("MONGODB_URI is not set");
-      return NextResponse.json({ error: "Configuración de base de datos faltante" }, { status: 500 });
-    }
-    
-    // Get session with error handling
-    let session;
-    try {
-      session = await getServerSession(authOptions);
-    } catch (authError) {
-      console.error("Auth error:", authError);
-      return NextResponse.json({ error: "Error de autenticación" }, { status: 500 });
-    }
-
-    // Si la sesión es null, ¡problema de secreto!
-    if (!session) {
-      console.log("Fallo de sesión: La sesión es null");
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    console.log("Sesión recibida en API:", JSON.stringify(session, null, 2));
-
-    const userRole = (session.user as any)?.role;
-    if (userRole !== "admin") {
-      console.log(`Fallo de Rol: Se leyó "${userRole}". No es "admin"`);
-      return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
-    }
-
     // Connect to database with error handling
     try {
       await connectDB();
+      console.log("Database connected successfully");
     } catch (dbError) {
       console.error("Database connection error:", dbError);
       return NextResponse.json({ error: "Error de conexión a la base de datos" }, { status: 500 });
@@ -60,8 +21,18 @@ export async function GET(request: NextRequest) {
       console.log("Querying appointments with materials...");
       
       // First, let's get all appointments to debug
-      const allAppointments = await Appointment.find({}).select("description materials");
+      const allAppointments = await Appointment.find({}).select("_id description materials");
       console.log(`Total appointments in DB: ${allAppointments.length}`);
+      
+      // Log a few examples
+      allAppointments.slice(0, 3).forEach((apt, index) => {
+        console.log(`Appointment ${index + 1}:`, {
+          id: apt._id,
+          description: apt.description,
+          hasMaterials: apt.materials && apt.materials.length > 0,
+          materialsCount: apt.materials ? apt.materials.length : 0
+        });
+      });
       
       // Filter appointments that have materials
       appointmentsWithMaterials = await Appointment.find({
@@ -140,13 +111,21 @@ export async function GET(request: NextRequest) {
       (a, b) => b.totalQuantity - a.totalQuantity
     );
 
+    console.log(`Processed ${materialsData.length} individual materials`);
+    console.log(`Created ${summaryArray.length} unique material types`);
+
     return NextResponse.json(
       {
+        success: true,
         materials: materialsData,
         summary: summaryArray,
         totalMaterials: materialsData.length,
         totalAppointments: appointmentsWithMaterials.length,
         totalUniqueTypes: summaryArray.length,
+        debug: {
+          timestamp: new Date().toISOString(),
+          environment: process.env.NODE_ENV
+        }
       },
       { status: 200 }
     );
@@ -162,10 +141,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { 
         error: "Error al obtener materiales",
-        debug: process.env.NODE_ENV === 'development' ? {
+        debug: {
           message: errorMessage,
           timestamp: new Date().toISOString()
-        } : undefined
+        }
       },
       { status: 500 }
     );

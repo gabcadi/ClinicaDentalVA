@@ -23,13 +23,6 @@ const modules = [
     title: 'Historial de Citas',
     description: 'Consulta y administración del historial completo de citas.',
     href: '/admin/historial'
-  },
-  {
-    key: 'Materiales y Suministros',
-    icon: Search,
-    title: 'Materiales y Suministros',
-    description: 'Consulta y administración de materiales y suministros.',
-    href: '/admin/materiales'
   }
 ];
 

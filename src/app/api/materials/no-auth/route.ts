@@ -1,64 +1,89 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "../../../utils/mongodb";
-import Appointment, { IMaterial, IAppointment } from "../../../models/appointments";
+import Appointment from "../../../models/appointments";
 
 export async function GET(request: NextRequest) {
   try {
     console.log("No-auth materials API - Starting request");
     
-    // Connect to database with error handling
+    // Step 1: Test basic response
+    const step = request.nextUrl.searchParams.get('step') || 'all';
+    
+    if (step === 'basic') {
+      return NextResponse.json({
+        message: "Basic API test successful",
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Step 2: Test database connection
     try {
       await connectDB();
       console.log("Database connected successfully");
+      
+      if (step === 'connection') {
+        return NextResponse.json({
+          message: "Database connection successful", 
+          timestamp: new Date().toISOString()
+        });
+      }
     } catch (dbError) {
       console.error("Database connection error:", dbError);
-      return NextResponse.json({ error: "Error de conexión a la base de datos" }, { status: 500 });
+      return NextResponse.json({ 
+        error: "Error de conexión a la base de datos",
+        details: dbError instanceof Error ? dbError.message : "Unknown error"
+      }, { status: 500 });
     }
 
-    // Buscar todas las citas que tengan materiales
-    let appointmentsWithMaterials: IAppointment[];
+    // Step 3: Test simple query
+    let appointmentsWithMaterials: any[];
     try {
-      console.log("Querying appointments with materials...");
+      console.log("Testing simple query...");
       
-      // First, let's get all appointments to debug
-      const allAppointments = await Appointment.find({}).select("_id description materials");
-      console.log(`Total appointments in DB: ${allAppointments.length}`);
+      // First, test if we can query appointments at all
+      const appointmentCount = await Appointment.countDocuments();
+      console.log(`Total appointments in DB: ${appointmentCount}`);
       
-      // Log a few examples
-      allAppointments.slice(0, 3).forEach((apt, index) => {
-        console.log(`Appointment ${index + 1}:`, {
-          id: apt._id,
-          description: apt.description,
-          hasMaterials: apt.materials && apt.materials.length > 0,
-          materialsCount: apt.materials ? apt.materials.length : 0
+      if (step === 'count') {
+        return NextResponse.json({
+          message: "Database count successful",
+          totalAppointments: appointmentCount,
+          timestamp: new Date().toISOString()
         });
-      });
+      }
       
-      // Filter appointments that have materials
+      // Get first few appointments to inspect structure
+      const sampleAppointments = await Appointment.find({}).limit(3).lean();
+      console.log("Sample appointments:", JSON.stringify(sampleAppointments, null, 2));
+      
+      if (step === 'sample') {
+        return NextResponse.json({
+          message: "Sample query successful",
+          sampleAppointments: sampleAppointments,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Now try to find appointments with materials using a simpler query
       appointmentsWithMaterials = await Appointment.find({
-        $and: [
-          { materials: { $exists: true } },
-          { materials: { $ne: [] } },
-          { "materials.0": { $exists: true } }
-        ]
+        materials: { $exists: true, $ne: [] }
       })
-        .populate("patientId", "nombre email telefono")
-        .select(
-          "description date time materials patientId confirmed doctorReport totalPrice"
-        )
-        .sort({ date: -1 })
-        .lean(); // Use lean() for better performance
+      .populate("patientId", "nombre email telefono")
+      .lean();
       
       console.log(`Found ${appointmentsWithMaterials.length} appointments with materials`);
       
-      // Log the first appointment for debugging
       if (appointmentsWithMaterials.length > 0) {
         console.log("First appointment with materials:", JSON.stringify(appointmentsWithMaterials[0], null, 2));
       }
       
     } catch (queryError) {
       console.error("Database query error:", queryError);
-      return NextResponse.json({ error: "Error al consultar la base de datos" }, { status: 500 });
+      return NextResponse.json({ 
+        error: "Error al consultar la base de datos",
+        details: queryError instanceof Error ? queryError.message : "Unknown query error",
+        stack: queryError instanceof Error ? queryError.stack : "No stack"
+      }, { status: 500 });
     }
 
     // Procesar y agrupar materiales

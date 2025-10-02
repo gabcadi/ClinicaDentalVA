@@ -23,6 +23,13 @@ const modules = [
     title: 'Historial de Citas',
     description: 'Consulta y administración del historial completo de citas.',
     href: '/admin/historial'
+  },
+  {
+    key: 'inventario de materiales',
+    icon: Shield,
+    title: 'Inventario de Materiales',  
+    description: 'Consulta y administración del inventario de materiales médicos.',
+    href: '/admin/inventario'
   }
 ];
 

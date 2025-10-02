@@ -6,7 +6,31 @@ import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions); // Usar authOptions aquí a veces ayuda
+    console.log("Starting materials API request");
+    
+    // Simple test - return early to check if basic API works
+    // Uncomment next line for debugging
+    // return NextResponse.json({ message: "API is working", timestamp: new Date().toISOString() });
+    
+    // Check environment variables
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.error("NEXTAUTH_SECRET is not set");
+      return NextResponse.json({ error: "Configuración de autenticación faltante" }, { status: 500 });
+    }
+    
+    if (!process.env.MONGODB_URI) {
+      console.error("MONGODB_URI is not set");
+      return NextResponse.json({ error: "Configuración de base de datos faltante" }, { status: 500 });
+    }
+    
+    // Get session with error handling
+    let session;
+    try {
+      session = await getServerSession(authOptions);
+    } catch (authError) {
+      console.error("Auth error:", authError);
+      return NextResponse.json({ error: "Error de autenticación" }, { status: 500 });
+    }
 
     // Si la sesión es null, ¡problema de secreto!
     if (!session) {
@@ -22,17 +46,31 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
     }
 
-    await connectDB();
+    // Connect to database with error handling
+    try {
+      await connectDB();
+    } catch (dbError) {
+      console.error("Database connection error:", dbError);
+      return NextResponse.json({ error: "Error de conexión a la base de datos" }, { status: 500 });
+    }
 
     // Buscar todas las citas que tengan materiales
-    const appointmentsWithMaterials = await Appointment.find({
-      materials: { $exists: true, $ne: [] },
-    })
-      .populate("patientId", "nombre email telefono")
-      .select(
-        "description date time materials patientId confirmed doctorReport"
-      )
-      .sort({ date: -1 });
+    let appointmentsWithMaterials;
+    try {
+      appointmentsWithMaterials = await Appointment.find({
+        materials: { $exists: true, $ne: [] },
+      })
+        .populate("patientId", "nombre email telefono")
+        .select(
+          "description date time materials patientId confirmed doctorReport"
+        )
+        .sort({ date: -1 });
+      
+      console.log(`Found ${appointmentsWithMaterials.length} appointments with materials`);
+    } catch (queryError) {
+      console.error("Database query error:", queryError);
+      return NextResponse.json({ error: "Error al consultar la base de datos" }, { status: 500 });
+    }
 
     // Procesar y agrupar materiales
     const materialsData: any[] = [];
@@ -96,8 +134,21 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Error fetching materials:", error);
+    
+    // Provide more detailed error information
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : "No stack trace";
+    
+    console.error("Full error details:", { errorMessage, errorStack });
+    
     return NextResponse.json(
-      { error: "Error al obtener materiales" },
+      { 
+        error: "Error al obtener materiales",
+        debug: process.env.NODE_ENV === 'development' ? {
+          message: errorMessage,
+          timestamp: new Date().toISOString()
+        } : undefined
+      },
       { status: 500 }
     );
   }

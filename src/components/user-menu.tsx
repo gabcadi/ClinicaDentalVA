@@ -25,7 +25,7 @@ const UserButton = () => {
   // Cast seguro para acceder al rol extendido en la sesión (evita error TS si la augment no es recogida)
   // Solo evaluar el role si la sesión está completamente cargada
   const role = (status === 'authenticated' && session?.user) 
-    ? (session.user as any)?.role as 'admin' | 'user' | 'doctor' | undefined 
+    ? (session.user as any)?.role as 'admin' | 'user' | 'doctor' | 'patient' | undefined 
     : undefined;
   // Handle scroll for transparent/solid header transition
   useEffect(() => {
@@ -160,23 +160,12 @@ const UserButton = () => {
 
                   <DropdownMenuSeparator />
 
-                
-
-                  <Link href="/profile" passHref>
-                    <DropdownMenuItem
-                      asChild
-                      className="h-10 text-cyan-700 dark:text-cyan-300 font-medium cursor-pointer rounded-md hover:bg-cyan-100/70 dark:hover:bg-cyan-500/10 focus:bg-cyan-100 dark:focus:bg-cyan-500/10 focus-visible:outline-none transition-colors"
-                    >
-                      <span>Perfil</span>
-                    </DropdownMenuItem>
-                  </Link>
-
                   <Link href="/settings" passHref>
                     <DropdownMenuItem
                       asChild
                       className="h-10 text-cyan-700 dark:text-cyan-300 font-medium cursor-pointer rounded-md hover:bg-cyan-100/70 dark:hover:bg-cyan-500/10 focus:bg-cyan-100 dark:focus:bg-cyan-500/10 focus-visible:outline-none transition-colors"
                     >
-                      <span>Configuración</span>
+                      <span>Configuración del perfil</span>
                     </DropdownMenuItem>
                   </Link>
 
@@ -205,11 +194,22 @@ const UserButton = () => {
                       >
                         Panel Médico
                       </DropdownMenuItem>
+                    </>
+                  )}
+
+                  {status === 'authenticated' && role === "patient" && (
+                    <>
                       <DropdownMenuItem
                         className="h-10 text-cyan-700 dark:text-cyan-300 font-medium cursor-pointer rounded-md hover:bg-cyan-100/70 dark:hover:bg-cyan-500/10 focus:bg-cyan-100 dark:focus:bg-cyan-500/10 focus-visible:outline-none transition-colors"
-                        onClick={() => router.push("/doctor/calendar")}
+                        onClick={() => router.push("/patient/appointments")}
                       >
-                        Calendario
+                        Mis Citas
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="h-10 text-cyan-700 dark:text-cyan-300 font-medium cursor-pointer rounded-md hover:bg-cyan-100/70 dark:hover:bg-cyan-500/10 focus:bg-cyan-100 dark:focus:bg-cyan-500/10 focus-visible:outline-none transition-colors"
+                        onClick={() => router.push("/patient/history")}
+                      >
+                        Historial Médico
                       </DropdownMenuItem>
                     </>
                   )}

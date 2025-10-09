@@ -191,13 +191,10 @@ const HomePageContent = () => {
                       <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                ) : status === 'authenticated' ? (
-                  <Link href="/sign-up">
+                ) : status === 'authenticated'  ? (
                     <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
-                      <span>Completa tu perfil</span>
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                      <span>{`¡Bienvenido ${session.user.name}!`}</span>
                     </Button>
-                  </Link>
                 ) : (
                   <Link href="/sign-in">
                     <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">

@@ -266,3 +266,72 @@ body {
     font-size: 2.5rem;
   }
 }
+
+/* Animaciones para las cards de citas */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.appointment-card {
+  animation: slideInUp 0.5s ease-out forwards;
+}
+
+.appointment-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.appointment-card:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.appointment-card:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.appointment-card:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+.appointment-card:nth-child(6) {
+  animation-delay: 0.5s;
+}
+
+/* Estados de hover mejorados */
+.appointment-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilos para campos de contraseña con ícono */
+.password-input-container input {
+  padding-right: 3rem !important;
+  padding-left: 0.75rem !important;
+}
+
+.password-toggle-btn {
+  right: 0.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

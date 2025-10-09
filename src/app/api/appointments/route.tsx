@@ -76,11 +76,48 @@ export const GET = async (req: Request) => {
     // Obtener parámetros de consulta
     const url = new URL(req.url);
     const patientId = url.searchParams.get('patientId');
+    const populate = url.searchParams.get('populate');
     
     // Construir filtro
     const filter = patientId ? { patientId } : {};
     
-    const appointments = await Appointment.find(filter).sort({ date: -1, time: -1 });
+    let query = Appointment.find(filter).sort({ date: -1, time: -1 });
+    
+    // Si se solicita popular con datos del paciente
+    if (populate === 'patient') {
+      // Importar los modelos
+      const { default: Patient } = await import('../../models/patients');
+      const { default: User } = await import('../../models/users');
+      
+      // Obtener citas con datos del paciente
+      const appointments = await query.lean();
+      
+      // Popular manualmente los datos del paciente
+      const appointmentsWithPatients = await Promise.all(
+        appointments.map(async (appointment) => {
+          if (appointment.patientId) {
+            const patient = await Patient.findById(appointment.patientId).select('userId phone address').lean();
+            if (patient && patient.userId) {
+              const user = await User.findById(patient.userId).select('fullName email').lean();
+              return {
+                ...appointment,
+                patient: {
+                  _id: patient._id,
+                  name: user?.fullName || 'Paciente sin nombre',
+                  email: user?.email || '',
+                  phone: patient.phone || ''
+                }
+              };
+            }
+          }
+          return appointment;
+        })
+      );
+      
+      return NextResponse.json(appointmentsWithPatients, { status: 200 });
+    }
+    
+    const appointments = await query;
     return NextResponse.json(appointments, { status: 200 });
   } catch (error) {
     console.error('Error al obtener las citas:', error);

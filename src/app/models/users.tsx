@@ -4,7 +4,7 @@ interface IUser extends Document {
   fullName: string;
   email: string;
   password: string;
-  role: 'admin' | 'user' | 'doctor';
+  role: 'admin' | 'user' | 'doctor' | 'patient';
   resetPasswordToken?: string;
   resetPasswordExpiry?: Date;
   createdAt: Date;
@@ -15,7 +15,7 @@ const userSchema = new Schema<IUser>({
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['admin', 'user', 'doctor'], default: 'user' },
+    role: { type: String, enum: ['admin', 'user', 'doctor', 'patient'], default: 'user' },
     resetPasswordToken: { type: String },
     resetPasswordExpiry: { type: Date },
     createdAt: { type: Date, default: Date.now },

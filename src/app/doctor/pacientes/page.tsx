@@ -36,7 +36,11 @@ export default function PacientesPage() {
         getUsers()
       ]);
       setPacientes(patientsData);
-      setUsers(usersData);
+      // Filtrar usuarios para incluir solo los con rol 'patient' y 'user' por compatibilidad
+      const relevantUsers = usersData.filter((user: User) => 
+        user.role === 'patient' || user.role === 'user'
+      );
+      setUsers(relevantUsers);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Error al cargar los datos');

@@ -15,7 +15,7 @@ export interface User {
     _id: ObjectId;
     fullName: string;
     email: string;
-    role: 'admin' | 'doctor' | 'user';
+    role: 'admin' | 'doctor' | 'user' | 'patient';
     createdAt: Date;
     updatedAt: Date;
 } 

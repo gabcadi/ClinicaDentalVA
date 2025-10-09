@@ -132,19 +132,19 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
               <label className="text-sm font-medium text-slate-700">
                 Contraseña Actual
               </label>
-              <div className="relative">
+              <div className="relative password-input-container">
                 <Input
                   type={showPasswords.current ? 'text' : 'password'}
                   value={formData.currentPassword}
                   onChange={(e) => handleInputChange('currentPassword', e.target.value)}
                   placeholder="Ingresa tu contraseña actual"
-                  className="pr-10"
+                  className=""
                   required
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('current')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                  className="absolute password-toggle-btn top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer transition-colors duration-200 focus:outline-none focus:text-slate-700"
                 >
                   {showPasswords.current ? (
                     <EyeOff className="w-4 h-4" />
@@ -160,20 +160,19 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
               <label className="text-sm font-medium text-slate-700">
                 Nueva Contraseña
               </label>
-              <div className="relative">
+              <div className="relative password-input-container">
                 <Input
                   type={showPasswords.new ? 'text' : 'password'}
                   value={formData.newPassword}
                   onChange={(e) => handleInputChange('newPassword', e.target.value)}
                   placeholder="Ingresa tu nueva contraseña"
-                  className="pr-10"
                   required
                   minLength={6}
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('new')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                  className="absolute password-toggle-btn top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer transition-colors duration-200 focus:outline-none focus:text-slate-700"
                 >
                   {showPasswords.new ? (
                     <EyeOff className="w-4 h-4" />
@@ -192,19 +191,18 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
               <label className="text-sm font-medium text-slate-700">
                 Confirmar Nueva Contraseña
               </label>
-              <div className="relative">
+              <div className="relative password-input-container">
                 <Input
                   type={showPasswords.confirm ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                   placeholder="Confirma tu nueva contraseña"
-                  className="pr-10"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('confirm')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                  className="absolute password-toggle-btn top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer transition-colors duration-200 focus:outline-none focus:text-slate-700"
                 >
                   {showPasswords.confirm ? (
                     <EyeOff className="w-4 h-4" />
@@ -247,6 +245,22 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
           </form>
         </CardContent>
       </Card>
+
+      <style jsx>{`
+        .password-input-container input {
+          padding-right: 3rem !important; /* 48px */
+          padding-left: 0.75rem !important; /* 12px */
+        }
+        
+        .password-toggle-btn {
+          right: 0.75rem; /* 12px */
+          width: 1.5rem; /* 24px */
+          height: 1.5rem; /* 24px */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      `}</style>
     </div>
   );
 }

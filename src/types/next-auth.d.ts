@@ -5,7 +5,7 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      role?: "admin" | "user" | "doctor";
+      role?: "admin" | "user" | "doctor" | "patient";
     };
   }
 
@@ -14,6 +14,6 @@ declare module "next-auth" {
     name?: string | null;
     email?: string | null;
     image?: string | null;
-    role?: "admin" | "user" | "doctor";
+    role?: "admin" | "user" | "doctor" | "patient";
   }
 }

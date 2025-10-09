@@ -53,7 +53,7 @@ export default function ProfilePage() {
           _id: {} as any, // Using 'any' assertion for ObjectId
           fullName: session.user.name || "",
           email: session.user.email || "",
-          role: (session.user.role as "admin" | "doctor" | "user") || "user",
+          role: (session.user.role as "admin" | "doctor" | "user" | "patient") || "user",
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -61,7 +61,7 @@ export default function ProfilePage() {
         setUser(userObj);
 
         // If user is a patient, try to fetch their patient record
-        if (session.user.role === 'user') {
+        if (session.user.role === 'patient') {
           try {
             const response = await fetch(`/api/patients/by-user?email=${encodeURIComponent(session.user.email || '')}`);
             if (response.ok) {
@@ -151,8 +151,10 @@ export default function ProfilePage() {
         return "Administrador";
       case "doctor":
         return "Doctor";
-      case "user":
+      case "patient":
         return "Paciente";
+      case "user":
+        return "Usuario";
       default:
         return "Usuario";
     }
@@ -164,8 +166,10 @@ export default function ProfilePage() {
         return "bg-purple-500";
       case "doctor":
         return "bg-cyan-500";
-      case "user":
+      case "patient":
         return "bg-emerald-500";
+      case "user":
+        return "bg-blue-500";
       default:
         return "bg-gray-500";
     }
@@ -281,7 +285,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
                       <div className="text-sm font-medium text-cyan-400 mb-1">Tipo de Cuenta</div>
-                      <div className="text-white text-lg">{getRoleName(user?.role || "user")}</div>
+                      <div className="text-white text-lg">{getRoleName(user?.role || "user" )}</div>
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
                       <div className="text-sm font-medium text-cyan-400 mb-1">Miembro Desde</div>
@@ -309,15 +313,10 @@ export default function ProfilePage() {
                     </div>
                   )}
                   
-                  {user?.role === "user" && !patient && (
-                    <div className="text-center py-6 mt-6 border-t border-white/10">
-                      <p className="text-slate-300 mb-4">Todavía no has completado tu perfil de paciente</p>
-                      <Link href="/sign-up">
-                        <Button className="h-12 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
-                          <span>Completar perfil</span>
-                          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                      </Link>
+                  {user?.role === "user" && (
+                    <div className="text-center py-6 mt-6 border-t border-white/10 text-slate-100">
+                      <p>Eres un usuario registrado. Para acceder a servicios de la clínica,</p>
+                      <p>espera a que uno de nuestros doctores te registre como paciente activo.</p>
                     </div>
                   )}
                 </CardContent>
@@ -325,7 +324,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Appointments */}
-            {user?.role === "user" && patient && (
+            {user?.role === "patient" && patient && (
               <div className="p-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-3xl backdrop-blur-sm">
                 <Card className="bg-white/5 backdrop-blur-sm border-0 rounded-3xl overflow-hidden">
                   <CardHeader>
@@ -345,6 +344,38 @@ export default function ProfilePage() {
                           <span>Agendar una cita</span>
                           <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Patient panel */}
+            {user?.role === "patient" && patient && (
+              <div className="p-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-3xl backdrop-blur-sm">
+                <Card className="bg-white/5 backdrop-blur-sm border-0 rounded-3xl overflow-hidden">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <UserIcon className="h-5 w-5 text-cyan-400" />
+                      <span className="bg-gradient-to-r from-white to-cyan-100 bg-clip-text text-transparent">
+                        Portal del Paciente
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Link href="/patient/appointments" className="block">
+                        <div className="p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
+                          <h3 className="font-medium bg-gradient-to-r from-white to-cyan-100 bg-clip-text text-transparent mb-2">Mis Citas</h3>
+                          <p className="text-sm text-slate-300">Ver y gestionar tus citas médicas</p>
+                        </div>
+                      </Link>
+                      <Link href="/patient/history" className="block">
+                        <div className="p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
+                          <h3 className="font-medium bg-gradient-to-r from-white to-cyan-100 bg-clip-text text-transparent mb-2">Historial Médico</h3>
+                          <p className="text-sm text-slate-300">Consulta tu historial y tratamientos</p>
+                        </div>
                       </Link>
                     </div>
                   </CardContent>

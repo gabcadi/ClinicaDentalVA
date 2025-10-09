@@ -44,7 +44,7 @@ export default function NuevoPacientePage() {
     const fetchUsers = async () => {
       try {
         const data = await getUsers();
-        // Filtrar solo usuarios con rol "user"
+        // Filtrar solo usuarios con rol "user" (que no sean pacientes aún)
         const userRoleOnly = data.filter((user: User) => user.role === 'user');
         setUsers(userRoleOnly);
       } catch (error) {
@@ -99,10 +99,12 @@ export default function NuevoPacientePage() {
         throw new Error('Error al crear el paciente');
       }
 
-      toast.success('Paciente creado exitosamente');
+      const result = await response.json();
+      toast.success('Paciente creado exitosamente y rol de usuario actualizado');
       router.push('/doctor/pacientes');
-    } catch {
-      toast.error('Error al crear el paciente. Ya existe un usuario asignado como paciente.');
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      toast.error('Error al crear el paciente. Verifique que los datos sean correctos y que el usuario no esté ya registrado como paciente.');
     } finally {
       setLoading(false);
     }
@@ -119,6 +121,23 @@ export default function NuevoPacientePage() {
       <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white px-6 py-12">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-sky-700 mb-8">Nuevo Paciente</h1>
+        
+        {/* Nota informativa */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="w-5 h-5 text-blue-600 mt-0.5">
+              ℹ️
+            </div>
+            <div>
+              <h3 className="font-medium text-blue-900 mb-1">Información importante</h3>
+              <p className="text-blue-800 text-sm">
+                Al crear un paciente, el rol del usuario seleccionado cambiará automáticamente a "Paciente" 
+                para mantener la consistencia en el sistema. Solo aparecerán usuarios con rol "Usuario" que 
+                no estén ya registrados como pacientes.
+              </p>
+            </div>
+          </div>
+        </div>
         
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
           <form onSubmit={handleSubmit}>

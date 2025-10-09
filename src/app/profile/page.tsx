@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/lib/types/interfaces";
 import Link from "next/link";
-import { CalendarDays, Mail, User as UserIcon, Phone, MapPin, Clock, Shield, ArrowRight } from "lucide-react";
+import { CalendarDays, Mail, User as UserIcon, Phone, MapPin, Clock, Shield, ArrowRight, Key } from "lucide-react";
 import { toast } from "sonner";
+import ChangePasswordModal from "@/components/ui/change-password-modal";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -16,6 +17,7 @@ export default function ProfilePage() {
   const [patient, setPatient] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   
   // Define the animated particles component
   const DentalParticle = ({ delay = 0 }) => (
@@ -241,7 +243,13 @@ export default function ProfilePage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-center pt-4">
-                  
+                  <Button
+                    onClick={() => setShowChangePasswordModal(true)}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  >
+                    <Key className="w-4 h-4 mr-2" />
+                    Cambiar Contraseña
+                  </Button>
                 </CardFooter>
               </Card>
             </div>
@@ -261,23 +269,48 @@ export default function ProfilePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {patient ? (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
-                        <div className="text-sm font-medium text-cyan-400 mb-1">Edad</div>
-                        <div className="text-white text-lg">{patient.age} años</div>
-                      </div>
-                      <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
-                        <div className="text-sm font-medium text-cyan-400 mb-1">Teléfono</div>
-                        <div className="text-white text-lg">{patient.phone}</div>
-                      </div>
-                      <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group md:col-span-2">
-                        <div className="text-sm font-medium text-cyan-400 mb-1">Dirección</div>
-                        <div className="text-white text-lg">{patient.address}</div>
+                  {/* Información básica para todos los usuarios */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
+                      <div className="text-sm font-medium text-cyan-400 mb-1">Nombre Completo</div>
+                      <div className="text-white text-lg">{user?.fullName}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
+                      <div className="text-sm font-medium text-cyan-400 mb-1">Correo Electrónico</div>
+                      <div className="text-white text-lg">{user?.email}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
+                      <div className="text-sm font-medium text-cyan-400 mb-1">Tipo de Cuenta</div>
+                      <div className="text-white text-lg">{getRoleName(user?.role || "user")}</div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
+                      <div className="text-sm font-medium text-cyan-400 mb-1">Miembro Desde</div>
+                      <div className="text-white text-lg">{user ? new Date(user.createdAt).toLocaleDateString() : "N/A"}</div>
+                    </div>
+                  </div>
+                  
+                  {patient && (
+                    <div className="mt-6">
+                      <h4 className="text-lg font-medium text-cyan-400 mb-4">Información de Paciente</h4>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
+                          <div className="text-sm font-medium text-cyan-400 mb-1">Edad</div>
+                          <div className="text-white text-lg">{patient.age} años</div>
+                        </div>
+                        <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group">
+                          <div className="text-sm font-medium text-cyan-400 mb-1">Teléfono</div>
+                          <div className="text-white text-lg">{patient.phone}</div>
+                        </div>
+                        <div className="p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-cyan-400/30 transition-all duration-300 group md:col-span-2">
+                          <div className="text-sm font-medium text-cyan-400 mb-1">Dirección</div>
+                          <div className="text-white text-lg">{patient.address}</div>
+                        </div>
                       </div>
                     </div>
-                  ) : user?.role === "user" ? (
-                    <div className="text-center py-6">
+                  )}
+                  
+                  {user?.role === "user" && !patient && (
+                    <div className="text-center py-6 mt-6 border-t border-white/10">
                       <p className="text-slate-300 mb-4">Todavía no has completado tu perfil de paciente</p>
                       <Link href="/sign-up">
                         <Button className="h-12 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
@@ -285,10 +318,6 @@ export default function ProfilePage() {
                           <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </Link>
-                    </div>
-                  ) : (
-                    <div className="text-slate-300 text-center py-6">
-                      La información personal no está disponible para este tipo de cuenta.
                     </div>
                   )}
                 </CardContent>
@@ -389,6 +418,11 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
       
       <style jsx>{`
         @keyframes float-dental {

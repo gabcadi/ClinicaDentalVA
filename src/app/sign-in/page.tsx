@@ -10,12 +10,14 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { TriangleAlert, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
+import ForgotPasswordModal from '@/components/ui/forgot-password-modal';
 
 const SignIn = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [pending, setPending] = useState(false);
     const [error, setError] = useState('');
+    const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
     const router = useRouter();
 
     // Datos deterministas para partículas (evita random y no afecta la lógica del formulario)
@@ -124,13 +126,26 @@ const SignIn = () => {
                                 />
                             </div>
                             
-                            <Button 
-                                className="w-full h-12 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-600 to-blue-600 hover:from-cyan-400 hover:via-cyan-500 hover:to-blue-500 text-white font-semibold transition-all shadow-lg shadow-cyan-900/40 hover:shadow-cyan-800/50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed"
-                                size="lg" 
-                                disabled={pending}
-                            >
-                                {pending ? 'Iniciando...' : 'Iniciar sesión'}
-                            </Button>
+                            <div className="space-y-3">
+                                <Button 
+                                    className="w-full h-12 rounded-xl bg-gradient-to-r from-cyan-500 via-cyan-600 to-blue-600 hover:from-cyan-400 hover:via-cyan-500 hover:to-blue-500 text-white font-semibold transition-all shadow-lg shadow-cyan-900/40 hover:shadow-cyan-800/50 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    size="lg" 
+                                    disabled={pending}
+                                >
+                                    {pending ? 'Iniciando...' : 'Iniciar sesión'}
+                                </Button>
+                                
+                                <div className="text-center pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowForgotPasswordModal(true)}
+                                        disabled={pending}
+                                        className="text-sm text-cyan-300 hover:text-cyan-200 underline-offset-4 hover:underline transition-colors disabled:opacity-60 cursor-pointer"
+                                    >
+                                        ¿Olvidaste tu contraseña?
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </CardContent>
                     
@@ -145,6 +160,11 @@ const SignIn = () => {
                     </CardFooter>
                 </Card>
             </div>
+
+            <ForgotPasswordModal
+                isOpen={showForgotPasswordModal}
+                onClose={() => setShowForgotPasswordModal(false)}
+            />
 
             <style jsx>{`
                 @keyframes float-dental { 0%,100% { transform: translateY(0) scale(1); opacity:.35 } 50% { transform: translateY(-28px) scale(1.15); opacity:.8 } }

@@ -17,6 +17,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    const { protocol, host } = new URL(request.url);
+    const baseUrl = `${protocol}//${host}`;
+
     // Buscar el usuario
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
@@ -36,7 +39,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Crear el enlace de restablecimiento
-    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
 
     // Plantilla de correo
     const emailHtml = `

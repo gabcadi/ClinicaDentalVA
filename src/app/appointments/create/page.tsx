@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { getPatientById } from '@/lib/api/patients';
 import { Patient, User as UserType } from '@/lib/types/interfaces';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
  
 
 // Type guard para verificar si userId es un objeto User
@@ -23,6 +24,7 @@ const isUser = (userId: unknown): userId is UserType => {
 function CreateAppointmentsInner() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
+	const { data: session } = useSession();
 	const patientId = searchParams.get('patientId');
 
 	const [patient, setPatient] = useState<Patient | null>(null);
@@ -62,7 +64,46 @@ function CreateAppointmentsInner() {
 			toast.error('No se ha seleccionado un paciente válido');
 			return;
 		}
+		
 		try {
+			// Verificar si ya existe una cita en esa fecha y hora
+			const checkResponse = await fetch('/api/appointments');
+			if (checkResponse.ok) {
+				const allAppointments = await checkResponse.json();
+				
+				// Convertir la hora seleccionada a minutos para comparación
+				const [selectedHour, selectedMinute] = formData.time.split(':').map(Number);
+				const selectedTimeInMinutes = selectedHour * 60 + selectedMinute;
+				
+				// Buscar conflictos de horario
+				const conflict = allAppointments.find((apt: any) => {
+					if (apt.date !== formData.date) return false;
+					
+					const [aptHour, aptMinute] = apt.time.split(':').map(Number);
+					const aptTimeInMinutes = aptHour * 60 + aptMinute;
+					
+					// Verificar si hay solapamiento (mismo horario o dentro de 20 minutos)
+					const timeDifference = Math.abs(selectedTimeInMinutes - aptTimeInMinutes);
+					return timeDifference < 20;
+				});
+				
+				if (conflict) {
+					// Calcular hora sugerida (20 minutos después de la cita existente)
+					const [conflictHour, conflictMinute] = conflict.time.split(':').map(Number);
+					const suggestedTimeInMinutes = conflictHour * 60 + conflictMinute + 20;
+					const suggestedHour = Math.floor(suggestedTimeInMinutes / 60);
+					const suggestedMinute = suggestedTimeInMinutes % 60;
+					const suggestedTime = `${suggestedHour.toString().padStart(2, '0')}:${suggestedMinute.toString().padStart(2, '0')}`;
+					
+					toast.error('Horario no disponible', {
+						description: `Ya existe una cita el ${formData.date} a las ${conflict.time}. Por favor intenta con ${suggestedTime} o elige otra fecha.`,
+						duration: 6000,
+					});
+					return;
+				}
+			}
+			
+			// Si no hay conflictos, crear la cita
 			const response = await fetch('/api/appointments', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -80,7 +121,14 @@ function CreateAppointmentsInner() {
 				patientId: patientId || '',
 			});
 			toast.success('Cita creada exitosamente');
-			router.push(`/doctor/pacientes/${patientId}/citas`);
+			
+			// Redirigir según el rol del usuario
+			const userRole = (session?.user as any)?.role;
+			if (userRole === 'patient') {
+				router.push('/patient/appointments');
+			} else {
+				router.push(`/doctor/pacientes/${patientId}/citas`);
+			}
 		} catch (error) {
 			console.error(error);
 			toast.error(error instanceof Error ? error.message : 'Error al crear la cita');

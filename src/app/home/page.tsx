@@ -46,10 +46,10 @@ const HomePageContent = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Check if user is authenticated and has role 'user', then fetch their patient profile
+  // Check if user is authenticated and has role 'patient', then fetch their patient profile
   useEffect(() => {
     const checkUserPatient = async () => {
-      if (status === 'authenticated' && session?.user && (session.user as any)?.role === 'user' && !patientId) {
+      if (status === 'authenticated' && session?.user && (session.user as any)?.role === 'patient' && !patientId) {
         try {
           setLoading(true);
           const response = await fetch(`/api/patients/by-user?email=${encodeURIComponent(session.user.email || '')}`);
@@ -180,21 +180,23 @@ const HomePageContent = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 md:px-0">
-                {loading ? (
-                  <Button disabled className="h-14 px-8 bg-gradient-to-r from-cyan-500/50 to-blue-600/50 text-white font-semibold rounded-full">
-                    <span>Cargando...</span>
+                {(session?.user as any)?.role === 'patient' ? (
+                  loading || !patientId ? (
+                    <Button disabled className="h-14 px-8 bg-gradient-to-r from-cyan-500/50 to-blue-600/50 text-white font-semibold rounded-full">
+                      <span>Cargando...</span>
+                    </Button>
+                  ) : (
+                    <Link href={`/appointments/create?patientId=${patientId}`}>
+                      <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
+                        <span>Agenda tu cita aquí</span>
+                        <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  )
+                ) : status === 'authenticated' ? (
+                  <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
+                    <span>{`¡Bienvenido ${session?.user?.name || 'Usuario'}!`}</span>
                   </Button>
-                ) : patientId ? (
-                  <Link href={`/appointments/create?patientId=${patientId}`}>
-                    <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
-                      <span>Agenda tu cita</span>
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                ) : status === 'authenticated'  ? (
-                    <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">
-                      <span>{`¡Bienvenido ${session.user.name}!`}</span>
-                    </Button>
                 ) : (
                   <Link href="/sign-in">
                     <Button className="h-14 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/30 group">

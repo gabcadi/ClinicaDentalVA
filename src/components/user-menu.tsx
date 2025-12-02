@@ -205,12 +205,6 @@ const UserButton = () => {
                       >
                         Mis Citas
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="h-10 text-cyan-700 dark:text-cyan-300 font-medium cursor-pointer rounded-md hover:bg-cyan-100/70 dark:hover:bg-cyan-500/10 focus:bg-cyan-100 dark:focus:bg-cyan-500/10 focus-visible:outline-none transition-colors"
-                        onClick={() => router.push("/patient/history")}
-                      >
-                        Historial Médico
-                      </DropdownMenuItem>
                     </>
                   )}
 

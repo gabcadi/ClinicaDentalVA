@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from 'next-auth/react';
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppointmentGuard } from "@/components/AppointmentGuard";
@@ -65,6 +66,9 @@ const isUser = (userId: unknown): userId is UserType => {
 export default function AppointmentDetail() {
   const params = useParams();
   const appointmentId = params?.id as string;
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role;
+  const isPatient = userRole === 'user' || userRole === 'patient';
 
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -857,10 +861,12 @@ export default function AppointmentDetail() {
               <Download className="w-4 h-4" />
               Descargar
             </button>
-            <button className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all cursor-pointer">
-              <Edit3 className="w-4 h-4" />
-              Editar
-            </button>
+            {!isPatient && (
+              <button className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all cursor-pointer">
+                <Edit3 className="w-4 h-4" />
+                Editar
+              </button>
+            )}
           </div>
         </div>
 
@@ -1055,7 +1061,7 @@ export default function AppointmentDetail() {
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : (!isPatient ? (
               <div className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -1129,7 +1135,11 @@ export default function AppointmentDetail() {
                   </div>
                 </div>
               </div>
-            )}
+            ) : (
+              <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                <p className="text-gray-300">Aún no hay reporte médico.</p>
+              </div>
+            ))}
           </div>
 
           {/* Recetas */}
@@ -1150,13 +1160,15 @@ export default function AppointmentDetail() {
               </div>
 
               {/* Add Prescription Button */}
-              <button
-                onClick={openPrescriptionModal}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl shadow-lg transition-colors cursor-pointer"
-              >
-                <Pill className="w-4 h-4" />
-                Agregar Receta
-              </button>
+              {!isPatient && (
+                <button
+                  onClick={openPrescriptionModal}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl shadow-lg transition-colors cursor-pointer"
+                >
+                  <Pill className="w-4 h-4" />
+                  Agregar Receta
+                </button>
+              )}
             </div>
 
             {/* Prescriptions List */}
@@ -1220,11 +1232,13 @@ export default function AppointmentDetail() {
             </div>
 
             {/* Add Prescription Modal */}
-            <AddPrescriptionModal
-              isOpen={showPrescriptionModal}
-              onClose={closePrescriptionModal}
-              onSubmit={handleAddPrescription}
-            />
+            {!isPatient && (
+              <AddPrescriptionModal
+                isOpen={showPrescriptionModal}
+                onClose={closePrescriptionModal}
+                onSubmit={handleAddPrescription}
+              />
+            )}
           </div>
 
           {/* Materiales Utilizados */}
@@ -1243,13 +1257,15 @@ export default function AppointmentDetail() {
               </div>
 
               {/* Add Material Button */}
-              <button
-                onClick={openMaterialModal}
-                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-xl shadow-lg transition-colors cursor-pointer"
-              >
-                <Package className="w-4 h-4" />
-                Agregar Material
-              </button>
+              {!isPatient && (
+                <button
+                  onClick={openMaterialModal}
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-xl shadow-lg transition-colors cursor-pointer"
+                >
+                  <Package className="w-4 h-4" />
+                  Agregar Material
+                </button>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -1274,13 +1290,15 @@ export default function AppointmentDetail() {
                       <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-semibold">
                         x{material.quantity}
                       </span>
-                      <button
-                        onClick={() => material._id && material.name && openDeleteModal(material._id, material.name)}
-                        className="w-8 h-8 bg-red-500/20 hover:bg-red-500/40 rounded-lg flex items-center justify-center text-red-400 transition-colors cursor-pointer"
-                        title="Eliminar material"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      {!isPatient && (
+                        <button
+                          onClick={() => material._id && material.name && openDeleteModal(material._id, material.name)}
+                          className="w-8 h-8 bg-red-500/20 hover:bg-red-500/40 rounded-lg flex items-center justify-center text-red-400 transition-colors cursor-pointer"
+                          title="Eliminar material"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))
@@ -1309,12 +1327,14 @@ export default function AppointmentDetail() {
             )}
 
             {/* Add Material Modal */}
-            <AddMaterialModal
-              isOpen={showMaterialModal}
-              onClose={closeMaterialModal}
-              onSubmit={handleAddMaterial}
-              isLoading={isAddingMaterial}
-            />
+            {!isPatient && (
+              <AddMaterialModal
+                isOpen={showMaterialModal}
+                onClose={closeMaterialModal}
+                onSubmit={handleAddMaterial}
+                isLoading={isAddingMaterial}
+              />
+            )}
           </div>
         </div>
 
@@ -1346,23 +1366,27 @@ export default function AppointmentDetail() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <input
-              type="number"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="₡0.00"
-              className="w-full sm:w-64 px-4 py-2 rounded-xl border border-white/20 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
-            <button
-              onClick={handleSaveAmount}
-              disabled={isSaving || !amount.trim()}
-              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-semibold py-2 px-6 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              {isSaving ? "Guardando..." : "Guardar Monto"}
-            </button>
-          </div>
+          {!isPatient ? (
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <input
+                type="number"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="₡0.00"
+                className="w-full sm:w-64 px-4 py-2 rounded-xl border border-white/20 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              />
+              <button
+                onClick={handleSaveAmount}
+                disabled={isSaving || !amount.trim()}
+                className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-semibold py-2 px-6 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isSaving ? "Guardando..." : "Guardar Monto"}
+              </button>
+            </div>
+          ) : (
+            <p className="text-gray-300">El monto es sólo de lectura para pacientes.</p>
+          )}
 
           {appointment?.totalPrice !== undefined && (
             <p className="mt-4 text-white text-sm">
@@ -1384,13 +1408,15 @@ export default function AppointmentDetail() {
       </div>
 
       {/* Modal de confirmación de eliminación */}
-      <ConfirmDeleteModal
-        isOpen={showDeleteModal}
-        onClose={closeDeleteModal}
-        onConfirm={() => materialToDelete && handleDeleteMaterial(materialToDelete.id)}
-        materialName={materialToDelete?.name || ''}
-        isDeleting={isDeletingMaterial}
-      />
+      {!isPatient && (
+        <ConfirmDeleteModal
+          isOpen={showDeleteModal}
+          onClose={closeDeleteModal}
+          onConfirm={() => materialToDelete && handleDeleteMaterial(materialToDelete.id)}
+          materialName={materialToDelete?.name || ''}
+          isDeleting={isDeletingMaterial}
+        />
+      )}
       </div>
     </AppointmentGuard>
   );
